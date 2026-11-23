@@ -35,6 +35,7 @@ export function useCatalogFilters() {
     }, [loaded]);
 
     const publishers = usePaginatedSearch("/publishers/search");
+    const subjects = usePaginatedSearch("/subjects/search");
 
-    return { genres, languages, publishers, loading, open };
+    return { genres, languages, publishers, subjects, loading, open };
 }

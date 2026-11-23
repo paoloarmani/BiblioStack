@@ -12,6 +12,9 @@ export function useCatalog() {
     const genreId     = searchParams.get("genreId")     ?? "";
     const languageCode = searchParams.get("languageCode") ?? "";
     const publisherId = searchParams.get("publisherId") ?? "";
+    const subjectId   = searchParams.get("subjectId")   ?? "";
+    // Nome del soggetto passato dai link del dettaglio opera, solo per mostrarlo nel filtro
+    const subjectName = searchParams.get("subjectName") ?? "";
     const page        = Number(searchParams.get("page") ?? 1);
 
     const [works, setWorks]     = useState([]);
@@ -28,6 +31,7 @@ export function useCatalog() {
                 ...(genreId      && { genreId:      Number(genreId) }),
                 ...(languageCode && { languageCode }),
                 ...(publisherId  && { publisherId:  Number(publisherId) }),
+                ...(subjectId    && { subjectId:    Number(subjectId) }),
             }
             const res = await api.get("/works/search", { params });
             setWorks(res.data);
@@ -37,7 +41,7 @@ export function useCatalog() {
         } finally {
             setLoading(false);
         }
-    }, [search, genreId, languageCode, publisherId, page]);
+    }, [search, genreId, languageCode, publisherId, subjectId, page]);
 
     useEffect(() => {
         fetchWorks()
@@ -48,6 +52,7 @@ export function useCatalog() {
             const next = new URLSearchParams(prev);
             if (value) next.set(key, value);
             else next.delete(key);
+            if (key === "subjectId") next.delete("subjectName"); // il nome arriva dal combobox
             next.set("page", "1"); // reset pagina quando cambia filtro
             return next;
         });
@@ -65,7 +70,7 @@ export function useCatalog() {
         setSearchParams({ page: "1" });
     };
 
-    const activeFiltersCount = [genreId, languageCode, publisherId].filter(Boolean).length;
+    const activeFiltersCount = [genreId, languageCode, publisherId, subjectId].filter(Boolean).length;
 
     return {
         works,
@@ -73,7 +78,7 @@ export function useCatalog() {
         hasMore,
         page,
         search,
-        filters: { genreId, languageCode, publisherId },
+        filters: { genreId, languageCode, publisherId, subjectId, subjectName },
         activeFiltersCount,
         setFilter,
         setPage,

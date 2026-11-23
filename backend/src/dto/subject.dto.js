@@ -7,3 +7,8 @@ export const SubjectBaseDTO = z.object({
 });
 
 export const SubjectBaseListDTO = z.array(SubjectBaseDTO);
+
+export const SubjectSearchListDTO = z.object({
+    data: SubjectBaseListDTO,
+    hasMore: z.boolean()
+});

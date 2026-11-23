@@ -208,6 +208,33 @@ const main = async () => {
         await student.client("POST", "/reservations", { workId: "ISBN-978-88-452-7216-0" }), 409);
     expectStatus("DELETE copia di consultazione (admin)", await admin.client("DELETE", `/items/${refId}`), 200);
 
+    // Soggetti assegnati modificando l'opera: i nomi nuovi vengono creati, quelli esistenti riusati
+    const newSubject = `Smoke ${Date.now()}`;
+    expectStatus("PATCH /works/:id con soggetti", await admin.client("PATCH", "/works/ISBN-978-88-452-7216-0", {
+        subjects: ["medioevo", newSubject],
+    }), 200);
+    const w3s = await anon("GET", "/works/ISBN-978-88-452-7216-0");
+    const names = (w3s.data?.subjects ?? []).map((s) => s.name);
+    names.includes("Medioevo") && names.includes(newSubject) && names.length === 2
+        ? ok("soggetti sostituiti (esistente riusato senza duplicati, nuovo creato)")
+        : fail(`soggetti inattesi: ${JSON.stringify(names)}`);
+    const found = await anon("GET", `/subjects/search?search=${encodeURIComponent(newSubject)}`);
+    found.data?.data?.length === 1 ? ok("GET /subjects/search paginato") : fail(`subjects/search: ${JSON.stringify(found.data)}`);
+    await admin.client("PATCH", "/works/ISBN-978-88-452-7216-0", { subjects: ["Medioevo"] });
+    const smokeSubject = found.data?.data?.[0];
+    if (smokeSubject) await admin.client("DELETE", `/subjects/${smokeSubject.id}`);
+
+    // Copia danneggiata: si presta; copia smarrita: no
+    await librarian.client("PATCH", "/items/ITEM-001", { status: "damaged" });
+    const dmg = await librarian.client("POST", "/loans", { userId: luca.user.id, itemId: "ITEM-001", dueDate: due });
+    expectStatus("POST /loans su copia danneggiata → consentito", dmg, 201);
+    if (dmg.data?.id) await librarian.client("PATCH", `/loans/${dmg.data.id}/checkIn`);
+    await librarian.client("PATCH", "/items/ITEM-001", { status: "lost" });
+    expectStatus("POST /loans su copia smarrita → rifiutato", await librarian.client("POST", "/loans", {
+        userId: luca.user.id, itemId: "ITEM-001", dueDate: due,
+    }), 409);
+    await librarian.client("PATCH", "/items/ITEM-001", { status: "active" });
+
     section("Logout");
     expectStatus("POST /auth/logout", await student.client("POST", "/auth/logout"), 200);
     expectStatus("POST /auth/refresh dopo logout", await student.client("POST", "/auth/refresh"), 401);

@@ -11,8 +11,11 @@ import {
     linkAuthors,
     linkGenres,
     createAuthor,
-    preCheckAuthors
+    preCheckAuthors,
+    resolveSubjects,
+    setWorkSubjects
 } from "../utils/workBuilder.util.js";
+import { eq } from "drizzle-orm";
 
 // Funzione per verificare l'esistenza di un'opera, usata in getById, update e delete
 const findUniqueOrThrow = async (id) => {
@@ -57,8 +60,12 @@ export const workService = {
         return { source: "external", work: toWorkExternalDTO(external, isbn) };
     },
 
-    create: async (data) => {
-        const [newWork] = await workRepository.create(data);
+    create: async ({ subjects: subjectNames, ...data }) => {
+        const newWork = await db.transaction(async (tx) => {
+            const [created] = await tx.insert(works).values(data).returning();
+            if (subjectNames) await setWorkSubjects(tx, created.id, await resolveSubjects(tx, subjectNames));
+            return created;
+        });
         return await workRepository.findById(newWork.id);
     },
 
@@ -113,6 +120,7 @@ export const workService = {
 
             await linkAuthors(tx, newWork.id, finalAuthorIds);
             await linkGenres(tx, newWork.id, data.genreIds);
+            await setWorkSubjects(tx, newWork.id, await resolveSubjects(tx, data.subjects));
 
             return tx.query.works.findFirst({
                 where: { id: newWork.id },
@@ -128,9 +136,17 @@ export const workService = {
         });
     },
 
-    update: async (id, data) => {
+    // "subjects" (lista di nomi) sostituisce i soggetti dell'opera; se assente restano invariati
+    update: async (id, { subjects: subjectNames, ...data }) => {
         await findUniqueOrThrow(id);
-        await workRepository.update(id, data);
+        await db.transaction(async (tx) => {
+            if (Object.keys(data).length > 0) {
+                await tx.update(works).set(data).where(eq(works.id, id));
+            }
+            if (subjectNames) {
+                await setWorkSubjects(tx, id, await resolveSubjects(tx, subjectNames));
+            }
+        });
         return await workRepository.findById(id);
     },
 

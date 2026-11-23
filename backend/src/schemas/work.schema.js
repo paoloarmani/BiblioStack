@@ -12,6 +12,8 @@ export const CreateWorkSchema = z.object({
     pages: z.coerce.number().optional().nullable(),
     publicationDate: z.coerce.date().optional().nullable(),
     coverUrl: z.url().optional().nullable(),
+    // Soggetti per nome: quelli nuovi vengono creati
+    subjects: z.array(z.string().trim().min(1).max(255)).max(50).optional(),
 });
 
 export const UpdateWorkSchema = CreateWorkSchema.partial();
@@ -65,6 +67,9 @@ export const CreateWorkFromExternalSchema = z.object({
     genreIds: z.array(
         z.number().int().positive()
     ).default([]),
+
+    // Soggetti per nome (selezionati o creati nel form)
+    subjects: z.array(z.string().trim().min(1).max(255)).max(50).default([]),
 
     // Autori risolti dal bibliotecario dopo un conflitto
     resolvedAuthors: z.array(z.object({

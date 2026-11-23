@@ -14,6 +14,7 @@ export const workFormSchema = z.object({
     publicationCountry: z.string().length(2, "Deve essere un codice di 2 lettere").toLowerCase().optional().nullable(),
     deweyCode:          z.string().optional().nullable(),
     genreIds:           z.array(z.number()).default([]),
+    subjects:           z.array(z.string()).default([]),
 })
 
 export const emptyWorkForm = {
@@ -30,5 +31,6 @@ export const emptyWorkForm = {
     publicationCountry: "",
     deweyCode:          "",
     genreIds:           [],
+    subjects:           [],
     resolvedAuthors:    [],
 }

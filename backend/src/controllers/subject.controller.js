@@ -1,5 +1,5 @@
 import { subjectService } from "../services/subject.service.js";
-import { SubjectBaseDTO, SubjectBaseListDTO } from "../dto/subject.dto.js";
+import { SubjectBaseDTO, SubjectBaseListDTO, SubjectSearchListDTO } from "../dto/subject.dto.js";
 import { CreateSubjectSchema, SubjectSearchSchema, UpdateSubjectSchema } from "../schemas/subject.schema.js";
 
 export const subjectController = {
@@ -8,6 +8,16 @@ export const subjectController = {
             const { search } = SubjectSearchSchema.parse(req.query);
             const subjects = await subjectService.getAll({ ...req.pagination, search });
             res.json(SubjectBaseListDTO.parse(subjects));
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    search: async (req, res, next) => {
+        try {
+            const { search } = SubjectSearchSchema.parse(req.query);
+            const result = await subjectService.search({ ...req.pagination, search });
+            res.json(SubjectSearchListDTO.parse(result));
         } catch (error) {
             next(error);
         }

@@ -1,7 +1,8 @@
 import { useAuth } from "@/context/AuthContext.jsx";
 import { handleApiError } from "@/lib/handleApiError.js";
 import { notify } from "@/lib/notify.js";
-import { BookOpen } from "lucide-react";
+import { BookOpen, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge.jsx";
 import {Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle} from "@/components/ui/empty.jsx";
 import api from "@/api/axios.js";
@@ -43,6 +44,7 @@ export default function WorkDetail({ work, loading, error, refetch }) {
     const referenceOnly = work.referenceOnlyCount ?? 0;
     // Opera con sole copie di consultazione: non si presta e non si prenota
     const consultationOnly = (work.loanableCount ?? 0) === 0 && referenceOnly > 0;
+    const shelvedItems = (work.items ?? []).filter(i => i.shelfMark && i.status !== "lost");
 
 
     const handleDeleteItem = async (itemId) => {
@@ -82,8 +84,13 @@ export default function WorkDetail({ work, loading, error, refetch }) {
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="text-xs text-muted-foreground">Soggetti:</span>
                             {work.subjects.map(s => (
-                                <Badge key={s.id} variant="outline">
-                                    {s.name}
+                                <Badge key={s.id} variant="outline" asChild>
+                                    <Link
+                                        to={`/catalog?subjectId=${s.id}&subjectName=${encodeURIComponent(s.name)}`}
+                                        title={`Altre opere su "${s.name}"`}
+                                    >
+                                        {s.name}
+                                    </Link>
                                 </Badge>
                             ))}
                         </div>
@@ -117,6 +124,30 @@ export default function WorkDetail({ work, loading, error, refetch }) {
             </div>
 
             <DetailWorkDescription description={work.description}/>
+
+            {/* Dove trovarlo: collocazioni delle copie presenti (lo staff ha la tabella completa più sotto) */}
+            {!isStaff && shelvedItems.length > 0 && (
+                <section className="space-y-3">
+                    <h2 className="text-lg font-semibold">Dove trovarlo</h2>
+                    <ul className="flex flex-wrap gap-2">
+                        {shelvedItems.map(item => (
+                            <li
+                                key={item.id}
+                                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm"
+                            >
+                                <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="font-mono">{item.shelfMark}</span>
+                                {!item.loanable && (
+                                    <span className="text-xs text-muted-foreground">· solo consultazione</span>
+                                )}
+                                {item.status === "damaged" && (
+                                    <span className="text-xs text-muted-foreground">· copia danneggiata</span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
 
             {isStaff && work.items?.length > 0 && (
                 <>

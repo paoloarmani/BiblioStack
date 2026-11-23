@@ -23,7 +23,13 @@ function FilterSection({ label, children }) {
 }
 
 export default function CatalogFilters({ filters, onFilter, onClear, activeCount }) {
-    const { genres, languages, publishers, loading: filtersLoading, open: openFilters } = useCatalogFilters();
+    const { genres, languages, publishers, subjects, loading: filtersLoading, open: openFilters } = useCatalogFilters();
+
+    // Soggetto arrivato da un link (es. dal dettaglio opera): lo aggiungo alla lista così il combobox ne mostra il nome
+    const subjectItems = filters.subjectId && filters.subjectName
+        && !subjects.items.some(s => String(s.id) === filters.subjectId)
+        ? [{ id: Number(filters.subjectId), name: filters.subjectName }, ...subjects.items]
+        : subjects.items;
 
     return (
         <aside className="space-y-6">
@@ -49,6 +55,23 @@ export default function CatalogFilters({ filters, onFilter, onClear, activeCount
                     searchPlaceholder="Cerca genere..."
                     getOptionValue={(g) => String(g.id)}
                     renderLabel={(g) => g.name}
+                />
+            </FilterSection>
+
+            <FilterSection label="Soggetto">
+                <AppCombobox
+                    value={filters.subjectId}
+                    onChange={(v) => onFilter("subjectId", v)}
+                    items={subjectItems}
+                    loading={subjects.loading}
+                    hasMore={subjects.hasMore}
+                    onOpen={subjects.open}
+                    onLoadMore={subjects.loadMore}
+                    onSearch={subjects.updateSearch}
+                    placeholder="Tutti i soggetti"
+                    searchPlaceholder="Cerca soggetto (es. urbanistica)..."
+                    getOptionValue={(s) => String(s.id)}
+                    renderLabel={(s) => s.name}
                 />
             </FilterSection>
 

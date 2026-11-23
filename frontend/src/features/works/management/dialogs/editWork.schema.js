@@ -14,4 +14,5 @@ export const editWorkSchema = z.object({
     ),
     publicationDate: z.string().optional().nullable(),
     coverUrl: z.string().optional().nullable(),
+    subjects: z.array(z.string()).default([]),
 })

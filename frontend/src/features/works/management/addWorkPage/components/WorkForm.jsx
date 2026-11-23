@@ -12,6 +12,7 @@ import { workFormSchema } from "@/features/works/management/addWorkPage/workForm
 import { useGenres } from "@/features/works/management/addWorkPage/hooks/useGenres.js";
 import FormField from "@/features/works/management/addWorkPage/components/FormField.jsx";
 import GenresField from "@/features/works/management/addWorkPage/components/GenresField.jsx";
+import SubjectsField from "@/features/works/components/SubjectsField.jsx";
 import AuthorsField from "@/features/works/management/addWorkPage/components/AuthorsField.jsx";
 import AppCombobox from "@/components/common/AppCombobox.jsx";
 import DateSelector from "@/components/common/DateSelector.jsx";
@@ -221,6 +222,18 @@ export default function WorkForm({ form: externalForm, onSubmit, loading }) {
                         value={field.value}
                         onChange={field.onChange}
                         genres={genres}
+                    />
+                )}
+            />
+
+            <Controller
+                name="subjects"
+                control={control}
+                render={({ field }) => (
+                    <SubjectsField
+                        value={field.value ?? []}
+                        onChange={field.onChange}
+                        error={errors.subjects?.message}
                     />
                 )}
             />

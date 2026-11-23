@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { handleApiError } from "@/lib/handleApiError.js";
-import { BookOpen, Calendar, Globe, Hash, Bookmark } from "lucide-react";
+import { BookOpen, Calendar, Globe, Hash, Bookmark, Tags } from "lucide-react";
 import { Controller } from "react-hook-form";
 import {
     Dialog,
@@ -23,6 +23,7 @@ import { safeFormat } from "@/lib/dateUtils.js";
 import AppCombobox from "@/components/common/AppCombobox.jsx";
 import DateSelector from "@/components/common/DateSelector.jsx";
 import FormField from "@/features/works/management/addWorkPage/components/FormField.jsx";
+import SubjectsField from "@/features/works/components/SubjectsField.jsx";
 import ConfirmDialog from "@/components/common/dialogs/ConfirmDialog.jsx";
 
 
@@ -224,6 +225,18 @@ export default function EditWorkDialog({ work, open, onClose, onConfirm }) {
                             />
                         </FormField>
 
+                        <Controller
+                            name="subjects"
+                            control={control}
+                            render={({ field }) => (
+                                <SubjectsField
+                                    value={field.value ?? []}
+                                    onChange={field.onChange}
+                                    error={errors.subjects?.message}
+                                />
+                            )}
+                        />
+
                         <FormField label="Cover URL" error={errors.coverUrl?.message}>
                             <Input {...register("coverUrl")} placeholder="https://..." />
                         </FormField>
@@ -276,6 +289,11 @@ export default function EditWorkDialog({ work, open, onClose, onConfirm }) {
                         icon={Bookmark}
                         label="Codice Dewey"
                         value={pendingData?.deweyCode}
+                    />
+                    <SummaryRow
+                        icon={Tags}
+                        label="Soggetti"
+                        value={pendingData?.subjects?.length ? pendingData.subjects.join(", ") : "Nessuno"}
                     />
                 </div>
             </ConfirmDialog>

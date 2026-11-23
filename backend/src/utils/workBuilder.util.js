@@ -1,4 +1,5 @@
-import { publishers, authors, authorWorks, workGenres } from "../db/schema.js";
+import { publishers, authors, authorWorks, workGenres, subjects, workSubjects } from "../db/schema.js";
+import { eq, sql, inArray } from "drizzle-orm";
 import { findSimilarAuthor, parseAuthorName } from "./authorResolver.util.js";
 
 export const upsertPublisher = async (tx, publisherName) => {
@@ -41,6 +42,43 @@ export const linkGenres = async (tx, workId, genreIds) => {
     await tx
         .insert(workGenres)
         .values(genreIds.map(genreId => ({ workId, genreId })))
+        .onConflictDoNothing();
+};
+
+// Converte una lista di nomi di soggetti in id: riusa quelli esistenti (senza badare a maiuscole) e crea i nuovi
+export const resolveSubjects = async (tx, names = []) => {
+    const clean = [...new Map(
+        names.map(n => n.trim().replace(/\s+/g, " "))
+            .filter(Boolean)
+            .map(n => [n.toLowerCase(), n])
+    ).values()];
+    if (clean.length === 0) return [];
+
+    const existing = await tx
+        .select({ id: subjects.id, name: subjects.name })
+        .from(subjects)
+        .where(inArray(sql`lower(${subjects.name})`, clean.map(n => n.toLowerCase())));
+    const byName = new Map(existing.map(s => [s.name.toLowerCase(), s.id]));
+
+    const missing = clean.filter(n => !byName.has(n.toLowerCase()));
+    if (missing.length > 0) {
+        const created = await tx
+            .insert(subjects)
+            .values(missing.map(name => ({ name: name.charAt(0).toUpperCase() + name.slice(1) })))
+            .onConflictDoNothing()
+            .returning({ id: subjects.id, name: subjects.name });
+        created.forEach(s => byName.set(s.name.toLowerCase(), s.id));
+    }
+    return clean.map(n => byName.get(n.toLowerCase())).filter(Boolean);
+};
+
+// Sostituisce i soggetti di un'opera con quelli indicati
+export const setWorkSubjects = async (tx, workId, subjectIds) => {
+    await tx.delete(workSubjects).where(eq(workSubjects.workId, workId));
+    if (subjectIds.length === 0) return;
+    await tx
+        .insert(workSubjects)
+        .values(subjectIds.map(subjectId => ({ workId, subjectId })))
         .onConflictDoNothing();
 };
 

@@ -15,6 +15,17 @@ export const subjectRepository = {
         });
     },
 
+    // Ricerca paginata per i combobox: carica un record in più per sapere se c'è un'altra pagina
+    search: async ({ page, limit, search }) => {
+        const list = await db.query.subjects.findMany({
+            ...(search && { where: { name: { ilike: `%${search}%` } } }),
+            offset: (page - 1) * limit,
+            limit: limit + 1,
+            orderBy: { name: "asc" }
+        });
+        return { data: list.slice(0, limit), hasMore: list.length > limit };
+    },
+
     findById: async (id) =>
         await db.query.subjects.findFirst({
             where: { id: id }

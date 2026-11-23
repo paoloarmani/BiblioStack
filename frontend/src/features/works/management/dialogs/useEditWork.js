@@ -21,6 +21,7 @@ function mapWorkToForm(data) {
         deweyCode:             data.dewey?.code            ?? "",
         publisherId:           data.publisher?.id?.toString() ?? "",
         coverUrl:              data.coverUrl               ?? "",
+        subjects:              data.subjects?.map(s => s.name) ?? [],
     }
 }
 
@@ -44,6 +45,7 @@ export function useEditWork(work, open) {
             deweyCode:             "",
             publisherId:           "",
             coverUrl:              "",
+            subjects:              [],
         }
     });
 

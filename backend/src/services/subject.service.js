@@ -23,6 +23,9 @@ export const subjectService = {
     getAll: async ({ page, limit, search }) =>
         await subjectRepository.findAll({ page, limit, search }),
 
+    search: async (params) =>
+        await subjectRepository.search(params),
+
     getById: async (id) =>
         await findUniqueOrThrow(id),
 

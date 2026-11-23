@@ -9,6 +9,9 @@ const router = express.Router();
 // GET /subjects?page=1&limit=20&search=urban
 router.get("/", paginationMiddleware, subjectController.getAll);
 
+// GET /subjects/search?search=urban&page=1&limit=20  -> { data, hasMore } (combobox)
+router.get("/search", paginationMiddleware, subjectController.search);
+
 // GET /subjects/:id
 router.get("/:id", subjectController.getById);
 

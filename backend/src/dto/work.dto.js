@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AuthorDTO, ItemMiniDTO, UserMiniDTO } from "./shared.dto.js";
+import { AuthorDTO, UserMiniDTO } from "./shared.dto.js";
 import { WorkExternalDTO } from "../features/worksExternal/worksExternal.mapper.js";
 import { LocationBaseDTO } from "./location.dto.js";
 import { ItemStatusSchema } from "../schemas/item.schema.js";
@@ -96,9 +96,17 @@ export const WorkBaseListDTO = z.array(WorkBaseDTO);
 /* ---------------- DETAIL ---------------- */
 
 // Utente base: niente prezzo, niente locazione, niente data acquisto
+// Copie viste dall'utente: dove trovarle e se si possono prendere in prestito (niente prezzo né date)
+const ItemPublicSchema = z.object({
+    id: z.string(),
+    shelfMark: z.string().nullable(),
+    loanable: z.boolean(),
+    status: ItemStatusSchema
+});
+
 export const WorkDetailDTO = z.object({
     ...WorkDetailCommon,
-    items: z.array(ItemMiniDTO).default([])
+    items: z.array(ItemPublicSchema).default([])
 });
 
 // Staff: stesso oggetto + dettagli sulle copie + coda di prenotazioni attive (ready e pending)
