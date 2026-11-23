@@ -12,3 +12,6 @@ dist
 .idea/
 .vscode/
 .DS_Store
+
+# Backup del database (contengono dati personali: non vanno nel repository)
+backups/

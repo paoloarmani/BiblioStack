@@ -40,6 +40,48 @@ await c.end();
 console.log('✅ Amministratore pronto: ' + process.env.ADMIN_EMAIL);"
 }
 
+# Backup del database: dump SQL compresso, con DROP ... IF EXISTS in testa così da poter essere
+# ricaricato anche su un database già inizializzato. $1 = funzione compose, $2 = file (facoltativo)
+backup_db() {
+    local run="$1" out="${2:-}"
+    if [[ -z "$out" ]]; then
+        mkdir -p "$ROOT/backups"
+        out="$ROOT/backups/bibliostack-$(date +%F_%H%M).sql.gz"
+    fi
+    "$run" exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner --no-privileges' \
+        | gzip > "$out.tmp"
+    # Un dump vuoto o troncato non deve sostituire niente: controllo che finisca come un dump completo
+    if ! gzip -dc "$out.tmp" | tail -n 5 | grep -q "PostgreSQL database dump complete"; then
+        rm -f "$out.tmp"
+        echo "❌ Backup non riuscito (dump incompleto)" >&2
+        exit 1
+    fi
+    mv "$out.tmp" "$out"
+    echo "✅ Backup salvato in $out ($(du -h "$out" | cut -f1))"
+}
+
+# Ripristino di un backup creato da backup_db: sostituisce TUTTI i dati attuali del database.
+# Il backend viene fermato durante l'operazione; tutto avviene in un'unica transazione.
+restore_db() {
+    local run="$1" file="${2:?Specificare il file di backup (.sql.gz o .sql)}" force="${3:-}"
+    [[ -f "$file" ]] || { echo "❌ File non trovato: $file" >&2; exit 1; }
+    if [[ "$force" != "--si" ]]; then
+        read -r -p "⚠️  I dati attuali verranno SOSTITUITI con quelli di $file. Continuare? [s/N] " answer
+        [[ "$answer" =~ ^[sSyY]$ ]] || { echo "Annullato."; exit 0; }
+    fi
+    "$run" stop backend
+    local cat_cmd=(cat "$file")
+    [[ "$file" == *.gz ]] && cat_cmd=(gzip -dc "$file")
+    if "${cat_cmd[@]}" | "$run" exec -T db sh -c 'psql -q -v ON_ERROR_STOP=1 --single-transaction -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null; then
+        echo "✅ Ripristino completato"
+    else
+        echo "❌ Ripristino fallito: nessuna modifica applicata (transazione annullata)" >&2
+    fi
+    # Le sessioni attive (refresh token in Redis) potrebbero riferirsi a dati non più presenti
+    "$run" exec -T redis redis-cli FLUSHDB >/dev/null 2>&1 || true
+    "$run" start backend
+}
+
 # Esegue un file SQL (es. il pacchetto del catalogo storico) sul database dello stack indicato
 run_sql_file() {
     local run="$1" file="${2:?Specificare il file .sql}"
@@ -68,10 +110,16 @@ Avvio e arresto
 
 Dati
   seed            Carica i dati di esempio (solo su database vuoto)
-  reset           CANCELLA il database, lo ricrea dagli script SQL e ricarica il seed
+  reset [--senza-seed]
+                  CANCELLA il database, lo ricrea dagli script SQL e ricarica il seed
+                  (con --senza-seed resta vuoto, pronto per import-catalogo)
   admin <email>   Crea (o ripristina) un amministratore; la password viene chiesta a terminale
   import-catalogo <file.sql>
                   Importa un catalogo (es. quello storico) su un database SENZA seed
+  sql <file.sql>  Esegue un file SQL (es. una migrazione in docker/postgres/migrations)
+  backup [file]   Dump compresso del database (default: backups/bibliostack-DATA_ORA.sql.gz)
+  restore <file> [--si]
+                  SOSTITUISCE i dati con quelli di un backup (chiede conferma, o --si)
 
 Strumenti
   smoke           Esegue uno smoke test delle API (login admin, catalogo, ruoli...)
@@ -88,7 +136,9 @@ Produzione (docker/compose.prod.yml, configurazione in docker/.env.prod)
   prod ps|logs    Stato dei container / log
   prod admin <email>            Crea un amministratore
   prod import-catalogo <file>   Importa un catalogo sul database di produzione
-  prod backup [file]            Dump compresso del database (default: backup-AAAA-MM-GG.sql.gz)
+  prod sql <file>               Esegue un file SQL (migrazioni)
+  prod backup [file]            Dump compresso del database (default: backups/bibliostack-DATA_ORA.sql.gz)
+  prod restore <file> [--si]    Ripristina un backup (sostituisce i dati)
   prod psql       Shell SQL sul database di produzione
 
 Dopo "up":  frontend http://localhost:$(env_or_default FRONTEND_HOST_PORT 5173)
@@ -135,7 +185,8 @@ case "$cmd" in
         compose down -v
         compose up -d --build -V
         wait_backend
-        compose exec -T backend node src/db/seed.js
+        # --senza-seed: database vuoto, pronto per import-catalogo
+        [[ "${1:-}" == "--senza-seed" ]] || compose exec -T backend node src/db/seed.js
         ;;
     smoke)
         compose exec -T backend node scripts/smoke-test.mjs
@@ -155,7 +206,9 @@ case "$cmd" in
         compose exec "$svc" npm "$@"
         ;;
     admin)    create_admin compose "${1:-}" ;;
-    import-catalogo) run_sql_file compose "${1:-}" ;;
+    import-catalogo|sql) run_sql_file compose "${1:-}" ;;
+    backup)   backup_db compose "${1:-}" ;;
+    restore)  restore_db compose "${1:-}" "${2:-}" ;;
     prod)
         sub="${1:-help}"; shift || true
         case "$sub" in
@@ -168,14 +221,11 @@ case "$cmd" in
             ps)     compose_prod ps ;;
             logs)   compose_prod logs -f --tail=200 "$@" ;;
             admin)  create_admin compose_prod "${1:-}" ;;
-            import-catalogo) run_sql_file compose_prod "${1:-}" ;;
-            backup)
-                out="${1:-backup-$(date +%F).sql.gz}"
-                compose_prod exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner' | gzip > "$out"
-                echo "✅ Backup salvato in $out"
-                ;;
+            import-catalogo|sql) run_sql_file compose_prod "${1:-}" ;;
+            backup)  backup_db compose_prod "${1:-}" ;;
+            restore) restore_db compose_prod "${1:-}" "${2:-}" ;;
             psql)   compose_prod exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' ;;
-            *)      echo "Uso: ./bibliostack.sh prod up|down|ps|logs|admin|import-catalogo|backup|psql" >&2; exit 1 ;;
+            *)      echo "Uso: ./bibliostack.sh prod up|down|ps|logs|admin|import-catalogo|sql|backup|restore|psql" >&2; exit 1 ;;
         esac
         ;;
     help|-h|--help) usage ;;

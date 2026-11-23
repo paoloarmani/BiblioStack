@@ -5,7 +5,18 @@
 #     (le porte 80 e 443 devono essere raggiungibili da Internet)
 #   - localhost o un indirizzo IP (https://192.168.1.10) -> certificato interno di Caddy, utile per
 #     provare in rete locale (il browser chiederà di accettarlo)
-#   - :80 -> solo HTTP, quando l'HTTPS è gestito da un proxy esterno (impostare TRUST_PROXY_HOPS=2)
+#   - :80 -> solo HTTP, quando l'HTTPS è gestito da un proxy esterno: impostare anche
+#     TRUSTED_PROXIES=private_ranges (o l'IP del proxy) e TRUST_PROXY_HOPS=2
+#
+# TRUSTED_PROXIES: da quali indirizzi Caddy accetta X-Forwarded-For. Senza un proxy davanti resta
+# il default (nessuno), così un client non può falsificare il proprio IP; dietro un proxy, senza
+# questa impostazione il backend vedrebbe tutti gli utenti con l'IP del proxy (rate limit condiviso).
+
+{
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES:127.0.0.1/32}
+	}
+}
 
 {$SITE_ADDRESS:localhost} {
 	encode zstd gzip
