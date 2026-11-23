@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS languages (
 
 -- Tabella paesi di pubblicazione
 CREATE TABLE IF NOT EXISTS publication_countries (
-                                                     country_code char(2) CHECK (length(country_code) = 2) PRIMARY KEY,
+                                                     country_code char(2) CHECK (country_code ~ '^[a-z]{2}$') PRIMARY KEY, -- ISO 3166-1 alpha-2 minuscolo, come lo invia il frontend
                                                      name text NOT NULL UNIQUE
 );
 
@@ -80,13 +80,7 @@ CREATE TABLE IF NOT EXISTS locations (
 );
 
 
--- Tabella ruoli utente
-CREATE TABLE IF NOT EXISTS roles (
-                                     id smallint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                                     name text NOT NULL UNIQUE
-);
-
-
+-- Ruoli utente
 CREATE TYPE user_role AS ENUM ('admin', 'librarian', 'user');
 
 -- Tabelle utenti

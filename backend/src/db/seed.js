@@ -32,9 +32,9 @@ async function seed() {
     const [italy, usa, france] = await db
         .insert(schema.publicationCountries)
         .values([
-            { countryCode: "IT", name: "Italia" },
-            { countryCode: "US", name: "Stati Uniti" },
-            { countryCode: "FR", name: "Francia" },
+            { countryCode: "it", name: "Italia" },
+            { countryCode: "us", name: "Stati Uniti" },
+            { countryCode: "fr", name: "Francia" },
         ])
         .returning();
     console.log("✅ Publication countries inseriti");
