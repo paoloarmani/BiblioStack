@@ -1,0 +1,9 @@
+# Dati della biblioteca e risultati della conversione: NON vanno nel repository
+output/
+cache_*.json
+*.XML
+*.xml
+*.sql
+*.csv
+*.tar.gz
+__pycache__/

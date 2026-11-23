@@ -8,20 +8,30 @@ per utenti, bibliotecari e amministratori.
 
 Il progetto permette di:
 
-- Consultare e cercare le opere presenti nel catalogo;
-- Visualizzare i dettagli di un’opera e prenotare le copie disponibili;
-- Gestire prestiti, restituzioni, prenotazioni e storico delle attività;
+- Consultare e cercare le opere presenti nel catalogo, anche per soggetto
+  (argomento), genere, lingua ed editore;
+- Visualizzare i dettagli di un’opera, sapere dove trovarla a scaffale
+  (collocazione) e prenotare le copie disponibili;
+- Gestire prestiti, restituzioni, prenotazioni e storico delle attività, anche
+  prestando un libro direttamente dalla gestione opere;
 - Gestire utenti, ruoli, sospensioni, opere e copie dalla dashboard
-  amministrativa;
+  amministrativa: collocazione univoca di ogni copia, copie di sola
+  consultazione (prestito non consentito), copie danneggiate o smarrite;
 - Usare tessere e codici QR per l’identificazione degli utenti;
 - Inviare notifiche e promemoria automatici per prestiti e prenotazioni;
 - Arricchire i dati bibliografici tramite Google Books API e Open Library API.
 
-Il repository è organizzato in due applicazioni:
+Il repository è organizzato così:
 
-- `frontend/`: interfaccia React eseguita con Vite;
+- `frontend/`: interfaccia React eseguita con Vite (in produzione servita da Caddy);
 - `backend/`: API REST basate su Node.js ed Express;
-- `docker/`: servizi PostgreSQL e Redis utilizzati dall’applicazione.
+- `docker/`: compose di sviluppo e produzione, immagine PostgreSQL, script SQL di
+  inizializzazione (`postgres/init`) e migrazioni (`postgres/migrations`);
+- `tools/catalogo-winiride/`: convertitore del vecchio catalogo WinIride;
+- `docs/`: guide di [messa in produzione](docs/produzione.md),
+  [backup e ripristino](docs/backup.md) e
+  [importazione del catalogo storico](docs/catalogo-storico.md);
+- `bibliostack.sh`: comandi per sviluppo e produzione (`./bibliostack.sh help`).
 
 ### Stack tecnologico
 
@@ -29,6 +39,7 @@ Il repository è organizzato in due applicazioni:
   React Hook Form, Zod, TanStack Table e Axios.
 - **Backend:** Node.js, Express, Drizzle ORM, Zod, JWT, Argon2 e Pino.
 - **Database e servizi:** PostgreSQL e Redis, avviati tramite Docker Compose.
+- **Produzione:** Caddy (HTTPS automatico e reverse proxy) davanti al backend.
 
 ## Avvio rapido con Docker (nessuna installazione oltre a Docker)
 
@@ -46,41 +57,55 @@ girare in container. Sull'host serve solo Docker con il plugin `docker compose`.
   `mario.rossi@biblioteca.it` (bibliotecario), `sara.neri@studenti.it` (studente)
 - Senza `RESEND_API_KEY` le email non partono: in sviluppo i link di reset
   password e attivazione account vengono stampati in `./bibliostack.sh logs backend`.
-- `./bibliostack.sh reset` cancella e ricrea il database; `./bibliostack.sh help`
-  elenca tutti i comandi (psql, redis-cli, lint, build, shell nei container...).
+- `./bibliostack.sh reset` cancella e ricrea il database (con `--senza-seed` lo
+  lascia vuoto, per importare un catalogo); `./bibliostack.sh help` elenca tutti i
+  comandi (psql, redis-cli, lint, build, backup, restore, shell nei container...).
 - Valori di default e override: `docker/compose.dev.yml` e `docker/.env.dev.example`.
 
 Su Windows usare WSL2 oppure Git Bash per lanciare lo script.
 
-## Messa in produzione con Docker
+## Messa in produzione
 
-`docker/compose.prod.yml` avvia la versione compilata:
-
-| Servizio | Ruolo | Esposto |
-|---|---|---|
-| `web` | Caddy: serve la build del frontend, inoltra `/api` al backend e gestisce HTTPS | porte 80/443 |
-| `backend` | Node con le sole dipendenze di produzione | no |
-| `db`, `redis` | PostgreSQL e Redis, con i dati in volumi Docker | no |
+In breve: `docker/compose.prod.yml` avvia quattro container. **Caddy** (`web`) è l'unico esposto,
+gestisce HTTPS e serve il frontend compilato; backend, PostgreSQL e Redis restano interni.
 
 ```bash
-cp docker/.env.prod.example docker/.env.prod   # compilare dominio, password e segreti
+cp docker/.env.prod.example docker/.env.prod   # dominio, password e segreti
 ./bibliostack.sh prod up                       # build e avvio
-./bibliostack.sh prod admin admin@scuola.it    # primo amministratore (password chiesta a terminale)
+./bibliostack.sh prod admin admin@scuola.it    # primo amministratore
 ```
 
-- **HTTPS è obbligatorio**, perché i cookie di sessione in produzione sono `secure`.
-  `SITE_ADDRESS` decide come ottenerlo:
-  - un dominio pubblico ottiene un certificato Let's Encrypt automatico (le porte 80 e 443 devono essere raggiungibili);
-  - `localhost` o un IP usano il certificato interno di Caddy, utile per le prove in rete locale;
-  - `:80` lascia l'HTTPS a un proxy esterno (in quel caso impostare `TRUST_PROXY_HOPS=2`).
-- Il frontend chiama l'API sullo stesso dominio (`/api`), quindi non serve CORS.
-  `PUBLIC_URL` deve comunque essere l'indirizzo con cui gli utenti aprono l'app:
-  viene usato per i link nelle email.
-- Gli script `docker/postgres/init/*.sql` creano lo schema alla prima creazione del volume.
-  In produzione non va caricato il seed demo. Per importare un catalogo esistente:
-  `./bibliostack.sh prod import-catalogo catalogo.sql`.
-- Backup: `./bibliostack.sh prod backup` produce un dump compresso del database.
-  Aggiornamenti: `git pull && ./bibliostack.sh prod up`.
+HTTPS è obbligatorio, perché i cookie di sessione sono `Secure`. La guida
+[docs/produzione.md](docs/produzione.md) descrive:
+- i quattro scenari HTTPS: dominio pubblico con Let's Encrypt, rete interna, certificato della
+  scuola, dietro un reverse proxy esistente;
+- tutte le variabili di configurazione;
+- gli aggiornamenti con le migrazioni del database;
+- i problemi frequenti.
+
+## Backup e ripristino
+
+```bash
+./bibliostack.sh prod backup                 # dump compresso in backups/ (escluso da git)
+./bibliostack.sh prod restore <file.sql.gz>  # sostituisce i dati, in un'unica transazione
+```
+
+La guida [docs/backup.md](docs/backup.md) spiega cosa salvare, come pianificare il backup con cron,
+come copiarlo fuori dal server e come ripristinarlo su un server nuovo.
+
+## Catalogo storico (WinIride)
+
+Il vecchio catalogo si importa da uno script SQL consegnato a parte. I dati non stanno nel
+repository; qui c'è solo il convertitore, in `tools/catalogo-winiride/`.
+
+```bash
+./bibliostack.sh reset --senza-seed                    # sviluppo: database vuoto
+./bibliostack.sh import-catalogo import_bibliostack.sql
+./bibliostack.sh admin admin@scuola.it
+```
+
+Procedura completa, regole di conversione e revisione delle anomalie:
+[docs/catalogo-storico.md](docs/catalogo-storico.md).
 
 ## Istruzioni di installazione (manuale)
 
@@ -175,8 +200,9 @@ npm install
 node src/db/seed.js
 ```
 
-Il seed inserisce dati iniziali di esempio per ruoli, lingue, paesi,
-editori, generi e altri dati di catalogo.
+Il seed inserisce dati di esempio: utenti di test (admin, bibliotecari,
+studenti), lingue, paesi, editori, generi, soggetti, opere, copie e prestiti.
+Non va usato in produzione.
 
 ### 4. Configurare il frontend
 
@@ -274,22 +300,30 @@ Le rotte amministrative richiedono autenticazione e autorizzazioni adeguate.
 ### Gestire opere e copie
 
 1. Accedere con un account autorizzato.
-2. Aprire `http://localhost:5173/admin/works`.
-3. Creare o modificare un’opera.
-4. Aggiungere e gestire le copie associate.
+2. Aprire `http://localhost:5173/admin/works`: per ogni opera si vedono le copie
+   disponibili sul totale.
+3. Creare o modificare un’opera, con generi e soggetti.
+4. Aggiungere copie con collocazione (es. "A1 I 3") e scegliere se il prestito è
+   consentito (le copie di sola consultazione non si prestano né si prenotano).
+5. Con **Presta** registrare un prestito: si sceglie la copia, si cerca l'utente
+   per nome, email o tessera (o si scansiona il QR) e si conferma la scadenza.
 
-<!-- INSERISCI QUI LO SCREENSHOT DELLA DASHBOARD AMMINISTRATIVA -->
-<!-- Esempio: ![Dashboard amministrativa](docs/images/dashboard-admin.png) -->
+![Gestione opere](docs/images/gestione-opere.png)
+
+![Prestito dalla gestione opere](docs/images/presta.png)
 
 ### Gestire prestiti e prenotazioni
 
-1. Aprire la sezione prestiti dalla dashboard.
-2. Registrare un nuovo prestito o una restituzione.
+1. Aprire la sezione prestiti dalla dashboard, oppure usare **Presta** dalla
+   gestione opere o dalla scheda di un'opera.
+2. Registrare un nuovo prestito o una restituzione. Le copie danneggiate si
+   possono prestare, quelle smarrite no.
 3. Consultare le prenotazioni pronte per il ritiro.
 4. Verificare notifiche e scadenze generate dal sistema.
 
-<!-- INSERISCI QUI LO SCREENSHOT DELLA GESTIONE DI PRESTITI E PRENOTAZIONI -->
-<!-- Esempio: ![Gestione prestiti](docs/images/prestiti.png) -->
+Ogni utente ritrova prestiti, scadenze e prenotazioni nel proprio profilo (`/profile`):
+
+![Profilo utente](docs/images/profilo.png)
 
 ### Tessera e codice QR
 
