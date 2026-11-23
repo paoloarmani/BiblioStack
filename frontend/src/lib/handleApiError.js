@@ -48,8 +48,8 @@ export function handleApiError(error, navigate) {
             notify.error("Questa copia è solo per la consultazione in sede: il prestito non è consentito");
             break;
 
-        case "ITEM_NOT_AVAILABLE":
-            notify.error("La copia risulta danneggiata o smarrita e non può essere prestata");
+        case "ITEM_LOST":
+            notify.error("La copia risulta smarrita e non può essere prestata");
             break;
 
         case "WORK_NOT_LOANABLE":

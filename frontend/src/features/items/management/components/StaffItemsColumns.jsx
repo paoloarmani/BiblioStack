@@ -25,7 +25,15 @@ export const getStaffItemsColumns = ({ isAdmin = false, onEdit, onDelete } = {})
             header: "Stato",
             cell: ({ row, getValue }) => {
                 const available = getValue();
-                if (row.original.loanable === false && row.original.status === "active") {
+                if (row.original.status === "lost") {
+                    return (
+                        <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-destructive" />
+                            <span className="text-xs text-muted-foreground">Smarrita</span>
+                        </div>
+                    );
+                }
+                if (row.original.loanable === false) {
                     return (
                         <div className="flex items-center gap-2">
                             <span className="h-2 w-2 rounded-full bg-muted-foreground" />
@@ -38,6 +46,7 @@ export const getStaffItemsColumns = ({ isAdmin = false, onEdit, onDelete } = {})
                         <span className={`h-2 w-2 rounded-full ${available ? "bg-success" : "bg-destructive"}`} />
                         <span className="text-xs text-muted-foreground">
                             {available ? "Disponibile" : "Non disponibile"}
+                            {row.original.status === "damaged" && " · danneggiata"}
                         </span>
                     </div>
                 );

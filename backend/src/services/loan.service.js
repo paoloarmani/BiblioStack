@@ -57,9 +57,9 @@ export const loanService = {
         if (!item) throw new AppError("Item not found", "NOT_FOUND", 404);
         if (!patron) throw new AppError("User not found", "NOT_FOUND", 404);
 
-        // Copie smarrite/danneggiate o di sola consultazione non si prestano
-        if (item.status !== "active") {
-            throw new AppError("Item is not available (damaged or lost)", "ITEM_NOT_AVAILABLE", 409);
+        // Le copie smarrite e quelle di sola consultazione non si prestano (le danneggiate sì)
+        if (item.status === "lost") {
+            throw new AppError("Item is marked as lost", "ITEM_LOST", 409);
         }
         if (!item.loanable) {
             throw new AppError("Item is for in-library use only", "ITEM_NOT_LOANABLE", 409);
