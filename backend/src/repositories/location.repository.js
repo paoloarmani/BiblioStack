@@ -9,6 +9,7 @@ export const locationRepository = {
         return await db.query.locations.findMany({
             limit: limit,
             offset: offset,
+            orderBy: { shelfCode: "asc", id: "asc" }, // ordine stabile, necessario per una paginazione coerente
             with: {
                 school: true
             }

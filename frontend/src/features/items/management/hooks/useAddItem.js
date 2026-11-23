@@ -6,6 +6,7 @@ import { notify } from "@/lib/notify.js";
 import { handleApiError } from "@/lib/handleApiError.js";
 import api from "@/api/axios.js";
 import { addItemSchema } from "@/features/items/management/schemas/addItem.schema.js";
+import { fetchAllLocations } from "@/features/items/management/hooks/useLocations.js";
 
 export function useAddItem(workId, open) {
     const [loading, setLoading] = useState(false);
@@ -30,8 +31,7 @@ export function useAddItem(workId, open) {
 
         const fetchLocations = async () => {
             try {
-                const { data } = await api.get("/locations");
-                setLocations(data);
+                setLocations(await fetchAllLocations());
             } catch (err) {
                 handleApiError(err, navigate);
             }
