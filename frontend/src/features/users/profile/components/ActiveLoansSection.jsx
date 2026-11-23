@@ -1,107 +1,78 @@
-import { BookOpen, Clock, AlertTriangle, PackageX } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BookOpen, Clock, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge.jsx";
 import { daysUntil, safeFormat } from "@/lib/dateUtils.js";
 import { formatAuthors } from "@/lib/authorUtils.js";
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty.jsx";
-import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item.jsx";
-import { Link } from "react-router-dom";
+import { ProfileSection, EmptyNote } from "@/features/users/profile/components/ProfileSection.jsx";
 
 function DueBadge({ dueDate }) {
-    const days = daysUntil(dueDate, { noMax: true })
-
-    if (days === null) return null
+    const days = daysUntil(dueDate, { noMax: true });
+    if (days === null) return null;
 
     if (days < 0)
         return (
             <Badge variant="destructive" className="gap-1">
                 <AlertTriangle className="h-3 w-3" />
-                Scaduto da {Math.abs(days)}g
+                Scaduto da {Math.abs(days)} {Math.abs(days) === 1 ? "giorno" : "giorni"}
             </Badge>
-        )
-
-    if (days === 0)
-        return (
-            <Badge variant="outline" className="gap-1 border-warning text-warning">
-                <Clock className="h-3 w-3" />
-                Scade oggi
-            </Badge>
-        )
-
+        );
     if (days <= 3)
         return (
-            <Badge variant="outline" className="gap-1 border-warning text-warning-foreground">
+            <Badge variant="outline" className="gap-1 border-warning text-amber-700 dark:text-amber-400">
                 <Clock className="h-3 w-3" />
-                Scade tra {days}g
+                {days === 0 ? "Scade oggi" : `Scade tra ${days} ${days === 1 ? "giorno" : "giorni"}`}
             </Badge>
-        )
-
+        );
     return (
         <Badge variant="outline" className="gap-1 text-muted-foreground">
             <Clock className="h-3 w-3" />
-            Scade tra {days}g
+            Tra {days} giorni
         </Badge>
-    )
+    );
 }
 
 function LoanCard({ loan }) {
-    const loanDate = safeFormat(loan.loanDate)
-    const authors = formatAuthors(loan.item?.work?.authors);
+    const work = loan.item?.work;
+    const authors = formatAuthors(work?.authors);
 
     return (
-        <Item
-            variant="outline"
-            className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-4 rounded-xl bg-secondary/30 p-4 hover:bg-secondary/50 transition-colors"
+        <Link
+            to={work?.id ? `/works/${encodeURIComponent(work.id)}` : "#"}
+            className="group flex gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-secondary/30 sm:p-4"
         >
-            <ItemMedia
-                variant="icon"
-                className="h-10 w-10 shrink-0 rounded-xl bg-primary/10"
-            >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                 <BookOpen className="h-5 w-5 text-primary" />
-            </ItemMedia>
-
-            <ItemContent className="min-w-0">
-                <ItemTitle className="w-full min-w-0 truncate">
-                    {loan.item?.work?.title ?? "Titolo non disponibile"}
-                    {authors && ` - ${authors}`}
-                </ItemTitle>
-
-                <ItemDescription className="min-w-0 truncate">
-                    Preso in prestito il {loanDate}
-                </ItemDescription>
-            </ItemContent>
-
-            <ItemActions className="shrink-0">
-                <DueBadge dueDate={loan.dueDate} />
-            </ItemActions>
-        </Item>
+            </div>
+            <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 font-medium leading-snug group-hover:text-primary">
+                    {work?.title ?? "Titolo non disponibile"}
+                </p>
+                {authors && <p className="truncate text-sm text-muted-foreground">{authors}</p>}
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                    <span>Dal {safeFormat(loan.loanDate)}</span>
+                    {loan.dueDate && <span>Restituire entro il <span className="font-medium text-foreground">{safeFormat(loan.dueDate)}</span></span>}
+                    <DueBadge dueDate={loan.dueDate} />
+                </div>
+            </div>
+        </Link>
     );
 }
 
 export default function ActiveLoansSection({ loans }) {
+    // Prima i prestiti che scadono prima
+    const sorted = [...loans].sort((a, b) => new Date(a.dueDate ?? 0) - new Date(b.dueDate ?? 0));
 
     return (
-        <section className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Prestiti attivi</h2>
-                <Link to="/loans?status=active&page=1" className="text-sm font-medium text-primary hover:underline">Vedi tutti</Link>
-            </div>
-
+        <ProfileSection title="Prestiti in corso" count={loans.length} linkTo="/loans?status=active&page=1">
             {loans.length === 0 ? (
-                <Empty>
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <PackageX />
-                        </EmptyMedia>
-                        <EmptyTitle>Nessun prestito attivo</EmptyTitle>
-                    </EmptyHeader>
-                </Empty>
+                <EmptyNote>
+                    Nessun prestito in corso. <Link to="/catalog" className="font-medium text-primary hover:underline">Sfoglia il catalogo</Link>
+                </EmptyNote>
             ) : (
                 <div className="flex flex-col gap-2">
-                    {loans.map((loan) => (
-                        <LoanCard key={loan.id} loan={loan} />
-                    ))}
+                    {sorted.map((loan) => <LoanCard key={loan.id} loan={loan} />)}
                 </div>
             )}
-        </section>
-    )
+        </ProfileSection>
+    );
 }

@@ -1,81 +1,45 @@
-import { ArrowRight, BookCheck, BookX, PackageX } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BookCheck, BookX } from "lucide-react";
 import { Badge } from "@/components/ui/badge.jsx";
 import { formatAuthors } from "@/lib/authorUtils.js";
 import { formatDateShort } from "@/lib/dateUtils.js";
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty.jsx";
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item.jsx";
-import { Link } from "react-router-dom";
+import { ProfileSection, EmptyNote } from "@/features/users/profile/components/ProfileSection.jsx";
 
-function ReturnedLoanCard({ loan }) {
-    const late = loan.returnDate && loan.dueDate && new Date(loan.returnDate) > new Date(loan.dueDate)
-    const authors = formatAuthors(loan.item?.work?.authors);
+function ReturnedLoanRow({ loan }) {
+    const late = loan.returnDate && loan.dueDate && new Date(loan.returnDate) > new Date(loan.dueDate);
+    const work = loan.item?.work;
+    const authors = formatAuthors(work?.authors);
 
     return (
-        <Item
-            variant="outline"
-            className="grid grid-cols-[auto_minmax(0,1fr)_max-content] items-center gap-4 rounded-xl bg-secondary/30"
-        >
-            <ItemMedia
-                variant="icon"
-                className={`h-10 w-10 shrink-0 rounded-xl ${
-                    late ? "bg-warning/10" : "bg-success/10"
-                }`}
-            >
-                {late ? (
-                    <BookX className="h-5 w-5 text-warning" />
-                ) : (
-                    <BookCheck className="h-5 w-5 text-success" />
-                )}
-            </ItemMedia>
-
-            <ItemContent className="min-w-0 gap-1">
-                <ItemTitle className="w-full min-w-0 truncate">
-                    {loan.item?.work?.title ?? "Titolo non disponibile"}
-                    {authors && ` - ${authors}`}
-                </ItemTitle>
-
-                <ItemDescription className="flex items-center gap-2 truncate">
-                    <span>{formatDateShort(loan.loanDate)}</span>
-                    <ArrowRight className="h-3 w-3 shrink-0" />
-                    <span>{formatDateShort(loan.returnDate)}</span>
-                </ItemDescription>
-            </ItemContent>
-
-            {late && (
-                <div className="shrink-0">
-                    <Badge variant="outline" className="border-warning text-warning">
-                        In ritardo
-                    </Badge>
-                </div>
-            )}
-        </Item>
-    )
+        <li className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
+            {late
+                ? <BookX className="h-4 w-4 shrink-0 text-warning" />
+                : <BookCheck className="h-4 w-4 shrink-0 text-success" />}
+            <div className="min-w-0 flex-1">
+                <Link to={work?.id ? `/works/${encodeURIComponent(work.id)}` : "#"}
+                      className="line-clamp-1 text-sm font-medium hover:text-primary">
+                    {work?.title ?? "Titolo non disponibile"}
+                </Link>
+                {authors && <p className="truncate text-xs text-muted-foreground">{authors}</p>}
+            </div>
+            <div className="shrink-0 text-right text-xs text-muted-foreground">
+                <p className="whitespace-nowrap">{formatDateShort(loan.loanDate)} → {formatDateShort(loan.returnDate)}</p>
+                {late && <Badge variant="outline" className="mt-1 border-warning text-amber-700 dark:text-amber-400">In ritardo</Badge>}
+            </div>
+        </li>
+    );
 }
 
 export default function ReturnedLoansSection({ loans }) {
-   return (
-        <section className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Prestiti restituiti</h2>
-                <Link to="/loans?status=returned&page=1" className="text-sm font-medium text-primary hover:underline">Vedi tutti</Link>
-            </div>
-
+    return (
+        <ProfileSection title="Ultimi prestiti restituiti" linkTo="/loans?status=returned&page=1">
             {loans.length === 0 ? (
-                <Empty>
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <PackageX />
-                        </EmptyMedia>
-                        <EmptyTitle>Nessun prestito passato</EmptyTitle>
-                    </EmptyHeader>
-                </Empty>
+                <EmptyNote>Lo storico dei prestiti restituiti comparirà qui.</EmptyNote>
             ) : (
-                <div className="flex flex-col gap-2">
-                    {loans.map((loan) => (
-                        <ReturnedLoanCard key={loan.id} loan={loan} />
-                    ))}
-                </div>
+                <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+                    {loans.map((loan) => <ReturnedLoanRow key={loan.id} loan={loan} />)}
+                </ul>
             )}
-        </section>
-    )
+        </ProfileSection>
+    );
 }

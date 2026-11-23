@@ -27,6 +27,8 @@ const ReservationDashboardSchema = z.object({
         authors: z.array(AuthorDTO)
     }),
     assignedItem: ItemMiniDTO.extend({
+        // Dove ritirare la copia pronta (es. "A1 I 3")
+        shelfMark: z.string().nullable().optional(),
         location: z.object({
             school:z.object({
                 name: z.string().nullable()

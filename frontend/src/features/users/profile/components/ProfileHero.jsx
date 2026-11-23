@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Mail, Phone, Shield, Wrench } from "lucide-react";
+import { Link } from "react-router-dom";
+import { IdCard, KeyRound, Mail, Phone, Shield } from "lucide-react";
 import { roleLabels } from "@/features/users/management/table/usersTable.constants.js";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.jsx";
 import { Badge } from "@/components/ui/badge.jsx";
@@ -8,77 +9,73 @@ import { useChangePassword } from "@/features/users/profile/hooks/useChangePassw
 import ConfirmDialog from "@/components/common/dialogs/ConfirmDialog.jsx";
 import SuspensionAlert from "@/features/users/profile/components/SuspensionAlert.jsx";
 
+// Intestazione compatta del profilo: chi sono, contatti e azioni rapide
 export default function ProfileHero({ user }) {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const { sendChangePasswordLink } = useChangePassword();
 
-    const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`;
+    const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
 
     const handleConfirmPasswordReset = async () => {
         const success = await sendChangePasswordLink(user.email);
-
-        if (success) {
-            setConfirmOpen(false);
-        }
+        if (success) setConfirmOpen(false);
     };
 
     return (
         <>
-            <section className="rounded-3xl border border-border bg-card px-10 py-10 shadow-sm">
-                <div className="flex flex-col items-center gap-6 text-center">
+            <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                    <Avatar className="h-16 w-16 shrink-0 rounded-2xl">
+                        <AvatarFallback className="rounded-2xl bg-primary/10 text-xl font-semibold text-primary">
+                            {initials}
+                        </AvatarFallback>
+                    </Avatar>
 
-                    <div className="relative">
-                        <Avatar className="h-24 w-24 rounded-3xl">
-                            <AvatarFallback className="rounded-3xl bg-primary/10 text-2xl font-semibold text-primary">
-                                {initials}
-                            </AvatarFallback>
-                        </Avatar>
-
-                        <Badge
-                            variant="secondary"
-                            className="absolute -bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap"
-                        >
-                            <Shield className="h-3 w-3" />
-                            { roleLabels[user.role] ?? user.role }
-                        </Badge>
-                    </div>
-
-                    <div>
-                        <h1 className="text-3xl font-semibold tracking-tight">
-                            {user.firstName} {user.lastName}
-                        </h1>
-                    </div>
-
-                    {(user.phone || user.email) && (
-                        <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground sm:flex-row sm:gap-4">
-                            {user.phone && (
-                                <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 shrink-0" />
-                                    <span>{user.phone}</span>
-                                </div>
-                            )}
-
-                            {user.email && (
-                                <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 shrink-0" />
-                                    <span>{user.email}</span>
-                                </div>
-                            )}
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="text-2xl font-semibold tracking-tight">
+                                {user.firstName} {user.lastName}
+                            </h1>
+                            <Badge variant="secondary" className="gap-1">
+                                <Shield className="h-3 w-3" />
+                                {roleLabels[user.role] ?? user.role}
+                            </Badge>
                         </div>
-                    )}
+                        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                            {user.email && (
+                                <span className="flex min-w-0 items-center gap-1.5">
+                                    <Mail className="h-4 w-4 shrink-0" />
+                                    <span className="truncate">{user.email}</span>
+                                </span>
+                            )}
+                            {user.phone && (
+                                <span className="flex items-center gap-1.5">
+                                    <Phone className="h-4 w-4 shrink-0" />
+                                    {user.phone}
+                                </span>
+                            )}
+                            <span className="flex items-center gap-1.5">
+                                <IdCard className="h-4 w-4 shrink-0" />
+                                Tessera n. {user.id}
+                            </span>
+                        </div>
+                    </div>
 
-                    <SuspensionAlert suspension={user.suspension} />
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 rounded-full px-6"
-                        onClick={() => setConfirmOpen(true)}
-                    >
-                        <Wrench className="h-4 w-4" />
-                        Cambia password
-                    </Button>
+                    <div className="flex flex-wrap gap-2 sm:flex-col sm:items-stretch lg:flex-row">
+                        <Button asChild variant="default" size="sm" className="gap-2">
+                            <Link to="/card">
+                                <IdCard className="h-4 w-4" />
+                                La mia tessera
+                            </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" className="gap-2" onClick={() => setConfirmOpen(true)}>
+                            <KeyRound className="h-4 w-4" />
+                            Cambia password
+                        </Button>
+                    </div>
                 </div>
+
+                <SuspensionAlert suspension={user.suspension} />
             </section>
 
             <ConfirmDialog

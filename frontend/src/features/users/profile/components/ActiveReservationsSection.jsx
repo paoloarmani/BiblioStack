@@ -1,40 +1,22 @@
-import { PackageX } from "lucide-react";
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty.jsx";
 import ReservationCard from "@/features/users/profile/components/ReservationCard.jsx";
 import { useActiveReservations } from "@/features/users/profile/hooks/useActiveReservations.js";
-import { Link } from "react-router-dom";
+import { ProfileSection, EmptyNote } from "@/features/users/profile/components/ProfileSection.jsx";
 
 export default function ActiveReservationsSection({ reservations }) {
-    const {
-        reservations: activeReservations,
-        loadingId,
-        cancelReservation
-    } = useActiveReservations(reservations);
+    const { reservations: activeReservations, loadingId, cancelReservation } = useActiveReservations(reservations);
+
+    // Prima quelle pronte per il ritiro
+    const sorted = [...activeReservations].sort((a, b) => (b.status === "ready") - (a.status === "ready"));
 
     return (
-        <section className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Prenotazioni</h2>
-                <Link
-                    to="/reservations"
-                    className="text-sm font-medium text-primary hover:underline"
-                >
-                    Vedi tutte
-                </Link>
-            </div>
-
+        <ProfileSection title="Prenotazioni" count={activeReservations.length} linkTo="/reservations" linkLabel="Vedi tutte">
             {activeReservations.length === 0 ? (
-                <Empty>
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <PackageX />
-                        </EmptyMedia>
-                        <EmptyTitle>Nessuna prenotazione attiva</EmptyTitle>
-                    </EmptyHeader>
-                </Empty>
+                <EmptyNote>
+                    Nessuna prenotazione attiva. Le opere non disponibili si prenotano dalla loro scheda.
+                </EmptyNote>
             ) : (
                 <div className="flex flex-col gap-2">
-                    {activeReservations.map((reservation) => (
+                    {sorted.map((reservation) => (
                         <ReservationCard
                             key={reservation.id}
                             reservation={reservation}
@@ -44,6 +26,6 @@ export default function ActiveReservationsSection({ reservations }) {
                     ))}
                 </div>
             )}
-        </section>
+        </ProfileSection>
     );
 }
