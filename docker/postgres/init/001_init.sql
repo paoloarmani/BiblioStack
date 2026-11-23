@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS items (
                                      shelf_mark text UNIQUE, -- Collocazione completa della copia (es. "A1 I 3"): scaffale, ripiano, posizione
                                      acquisition_date date,
                                      status item_status NOT NULL DEFAULT 'active',
+                                     loanable boolean NOT NULL DEFAULT true, -- false = prestito non consentito, solo consultazione in sede
                                      price numeric(12,2)
 );
 
@@ -236,4 +237,19 @@ CREATE TABLE IF NOT EXISTS work_genres (
                                            work_id text NOT NULL REFERENCES  works(id) ON DELETE CASCADE,
                                            genre_id smallint NOT NULL REFERENCES genres(id) ON DELETE CASCADE,
                                            PRIMARY KEY (work_id, genre_id)
+);
+
+
+-- Tabella soggetti: argomenti di cui tratta un'opera (es. "urbanistica", "Trentino"), diversi dal genere
+CREATE TABLE IF NOT EXISTS subjects (
+                                        id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                        name text NOT NULL UNIQUE
+);
+
+
+-- Tabella per relazione n/n tra soggetti e opere
+CREATE TABLE IF NOT EXISTS work_subjects (
+                                             work_id text NOT NULL REFERENCES works(id) ON DELETE CASCADE,
+                                             subject_id int NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+                                             PRIMARY KEY (work_id, subject_id)
 );

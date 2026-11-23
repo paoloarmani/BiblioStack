@@ -11,9 +11,15 @@ const GenreSchema = z.object({
     name: z.string()
 });
 
+const SubjectSchema = z.object({
+    id: z.number(),
+    name: z.string()
+});
+
 const ItemStaffSchema = z.object({
     id: z.string(),
     shelfMark: z.string().nullable(),
+    loanable: z.boolean(),
     price: z.coerce.number().nullable(),
     acquisitionDate: z.date().nullable(),
     location: LocationBaseDTO.nullable(),
@@ -64,10 +70,14 @@ const WorkDetailCommon = {
     otherTitleInformation: z.string().nullable().optional(),
     authors: z.array(AuthorDTO).default([]),
     genres: z.array(GenreSchema).default([]),
+    subjects: z.array(SubjectSchema).default([]),
     publisher: PublisherSchema.nullable().optional(),
     language: LanguageSchema.nullable().optional(),
     dewey: DeweySchema.nullable().optional(),
     availableCount: z.number().default(0),
+    // Copie attive prestabili (anche se ora in prestito) e copie di sola consultazione
+    loanableCount: z.number().default(0),
+    referenceOnlyCount: z.number().default(0),
     coverUrl: z.string().nullable().optional(),
     description: z.string().nullable().optional()
 };

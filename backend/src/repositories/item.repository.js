@@ -1,6 +1,6 @@
 import { db } from "../db/connection.js";
 import { items, itemAvailability } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export const itemRepository = {
 
@@ -52,6 +52,15 @@ export const itemRepository = {
                 }
             }
         });
+    },
+
+    // Conta le copie attive di un'opera, distinguendo prestabili e di sola consultazione
+    countActiveByWorkId: async (workId, tx = db) => {
+        const [loanable, referenceOnly] = await Promise.all([
+            tx.$count(items, and(eq(items.workId, workId), eq(items.status, "active"), eq(items.loanable, true))),
+            tx.$count(items, and(eq(items.workId, workId), eq(items.status, "active"), eq(items.loanable, false)))
+        ]);
+        return { loanable, referenceOnly };
     },
 
     create: async (data) =>

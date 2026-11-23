@@ -17,6 +17,7 @@ export function useEditItem(item, open, onSuccess) {
         defaultValues: {
             locationId: null,
             shelfMark: "",
+            notLoanable: false,
             currencyCode: null,
             acquisitionDate: null,
             price: null,
@@ -30,6 +31,7 @@ export function useEditItem(item, open, onSuccess) {
         form.reset({
             locationId: item.location?.id ?? null,
             shelfMark: item.shelfMark ?? "",
+            notLoanable: item.loanable === false,
             currencyCode: item.currencyCode ?? null,
             acquisitionDate: item.acquisitionDate
                 ? new Date(item.acquisitionDate).toISOString().split("T")[0]
@@ -43,8 +45,10 @@ export function useEditItem(item, open, onSuccess) {
         const values = form.getValues();
         setLoading(true);
         try {
+            const { notLoanable, ...rest } = values;
             await api.patch(`/items/${item.id}`, {
-                ...values,
+                ...rest,
+                loanable: !notLoanable,
                 shelfMark: values.shelfMark?.trim() || null,
                 price: values.price ? parseFloat(values.price) : null,
             });

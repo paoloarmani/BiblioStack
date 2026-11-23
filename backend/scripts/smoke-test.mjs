@@ -184,6 +184,30 @@ const main = async () => {
         expectStatus("DELETE /items/:id (admin)", await admin.client("DELETE", `/items/${smokeId}`), 200);
     }
 
+    section("Soggetti e copie di sola consultazione");
+    const subjects = await anon("GET", "/subjects?search=total");
+    expectStatus("GET /subjects?search=total", subjects, 200);
+    subjects.data?.some?.((s) => s.name === "Totalitarismo") ? ok("ricerca soggetti per nome") : fail("soggetto Totalitarismo non trovato");
+    const bySubject = await anon("GET", "/works/search?search=totalitarismo");
+    bySubject.data?.some?.((w) => w.id === "ISBN-978-88-06-22561-0")
+        ? ok("ricerca opere per soggetto") : fail(`ricerca per soggetto: ${JSON.stringify(bySubject.data).slice(0, 150)}`);
+    const w1 = await anon("GET", "/works/ISBN-978-88-04-72232-0");
+    w1.data?.subjects?.some?.((s) => s.name === "Milano") ? ok("soggetti nel dettaglio opera") : fail("soggetti assenti nel dettaglio");
+    // copia di sola consultazione su un'opera che non ha altre copie (work3)
+    const refId = `SMOKE-REF-${Date.now()}`;
+    expectStatus("POST /items con prestito non consentito",
+        await librarian.client("POST", "/items", { id: refId, workId: "ISBN-978-88-452-7216-0", loanable: false }), 201);
+    const w3 = await anon("GET", "/works/ISBN-978-88-452-7216-0");
+    w3.data?.referenceOnlyCount === 1 && w3.data?.availableCount === 0 && w3.data?.loanableCount === 0
+        ? ok("opera: 1 copia di consultazione, 0 disponibili al prestito")
+        : fail(`conteggi inattesi: ${JSON.stringify({ a: w3.data?.availableCount, l: w3.data?.loanableCount, r: w3.data?.referenceOnlyCount })}`);
+    expectStatus("POST /loans su copia di consultazione → rifiutato", await librarian.client("POST", "/loans", {
+        userId: luca.user.id, itemId: refId, dueDate: due,
+    }), 409);
+    expectStatus("POST /reservations su opera di sola consultazione → rifiutata",
+        await student.client("POST", "/reservations", { workId: "ISBN-978-88-452-7216-0" }), 409);
+    expectStatus("DELETE copia di consultazione (admin)", await admin.client("DELETE", `/items/${refId}`), 200);
+
     section("Logout");
     expectStatus("POST /auth/logout", await student.client("POST", "/auth/logout"), 200);
     expectStatus("POST /auth/refresh dopo logout", await student.client("POST", "/auth/refresh"), 401);

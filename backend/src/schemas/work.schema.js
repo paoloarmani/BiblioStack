@@ -22,6 +22,7 @@ export const WorkSearchSchema = z.object({
     page:         z.coerce.number().int().positive().default(1),
     limit:        z.coerce.number().int().positive().max(100).default(20),
     genreId:      z.coerce.number().int().positive().optional(),
+    subjectId:    z.coerce.number().int().positive().optional(),
     publisherId:  z.coerce.number().int().positive().optional(),
     languageCode: z.string().length(3).optional(),
     deweyCode:    z.string().optional(),

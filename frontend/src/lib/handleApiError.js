@@ -44,6 +44,22 @@ export function handleApiError(error, navigate) {
             notify.error("Questa collocazione è già assegnata a un'altra copia");
             break;
 
+        case "ITEM_NOT_LOANABLE":
+            notify.error("Questa copia è solo per la consultazione in sede: il prestito non è consentito");
+            break;
+
+        case "ITEM_NOT_AVAILABLE":
+            notify.error("La copia risulta danneggiata o smarrita e non può essere prestata");
+            break;
+
+        case "WORK_NOT_LOANABLE":
+            notify.error("Quest'opera è disponibile solo per la consultazione in sede");
+            break;
+
+        case "SUBJECT_ALREADY_EXISTS":
+            notify.error("Esiste già un soggetto con questo nome");
+            break;
+
         case "ITEM_HAS_DIPENDENCIES":
             notify.error("Non puoi eliminare l'opera perché è associata a uno o più prestiti");
             break;

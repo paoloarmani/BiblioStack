@@ -275,6 +275,17 @@ async function seed() {
     ]);
     console.log("✅ Work-Genres inseriti");
 
+    const [subjMilano, subjTotalitarismo, subjMedioevo] = await db
+        .insert(schema.subjects)
+        .values([{ name: "Milano" }, { name: "Totalitarismo" }, { name: "Medioevo" }])
+        .returning();
+    await db.insert(schema.workSubjects).values([
+        { workId: work1.id, subjectId: subjMilano.id },
+        { workId: work2.id, subjectId: subjTotalitarismo.id },
+        { workId: work3.id, subjectId: subjMedioevo.id },
+    ]);
+    console.log("✅ Soggetti inseriti");
+
     // -----------------------------------------------------------------------
     // ITEM (copie fisiche)
     // -----------------------------------------------------------------------

@@ -12,6 +12,7 @@ export const CreateItemSchema = z.object({
     workId:          z.string().min(1, "workId is required"),
     locationId:      z.number().int().positive().optional().nullable(),
     shelfMark:       ShelfMarkSchema,
+    loanable:        z.boolean().optional(), // false = prestito non consentito (solo consultazione)
     currencyCode:    z.string().length(3).optional().nullable(),
     acquisitionDate: z.coerce.date().optional().nullable(),
     price:           z.coerce.number().positive().optional().nullable()
@@ -28,6 +29,7 @@ export const ItemStatusSchema = z.enum([
 export const UpdateItemSchema = z.object({
     locationId:      z.number().int().positive().optional().nullable(),
     shelfMark:       ShelfMarkSchema,
+    loanable:        z.boolean().optional(),
     currencyCode:    z.string().length(3).optional().nullable(),
     acquisitionDate: z.coerce.date().optional().nullable(),
     price:           z.coerce.number().positive().optional().nullable(),

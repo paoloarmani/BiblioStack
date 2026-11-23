@@ -18,6 +18,7 @@ const LocationDTO = z.object({
 const ItemCore = z.object ({
     id: z.string(),
     shelfMark: z.string().nullable(),
+    loanable: z.boolean(),
     acquisitionDate: z.date().nullable(),
     status: ItemStatusSchema,
     price: z.coerce.number().nullable().optional()

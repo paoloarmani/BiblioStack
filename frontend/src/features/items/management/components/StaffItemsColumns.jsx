@@ -23,8 +23,16 @@ export const getStaffItemsColumns = ({ isAdmin = false, onEdit, onDelete } = {})
         {
             accessorKey: "available",
             header: "Stato",
-            cell: ({ getValue }) => {
+            cell: ({ row, getValue }) => {
                 const available = getValue();
+                if (row.original.loanable === false && row.original.status === "active") {
+                    return (
+                        <div className="flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Solo consultazione</span>
+                        </div>
+                    );
+                }
                 return (
                     <div className="flex items-center gap-2">
                         <span className={`h-2 w-2 rounded-full ${available ? "bg-success" : "bg-destructive"}`} />

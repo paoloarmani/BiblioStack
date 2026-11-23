@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Controller } from "react-hook-form";
-import { Loader2, Hash, MapPin, Calendar, Euro, Bookmark } from "lucide-react";
+import { Loader2, Hash, MapPin, Calendar, Euro, Bookmark, BookLock } from "lucide-react";
 import { Button } from "@/components/ui/button.jsx";
 import { Input } from "@/components/ui/input.jsx";
 import { Label } from "@/components/ui/label.jsx";
@@ -66,6 +66,7 @@ export default function AddItemDialog({ open, onClose, onSuccess, workId, workTi
     const summaryData = {
         id:              watch("id"),
         shelfMark:       watch("shelfMark"),
+        notLoanable:     watch("notLoanable"),
         acquisitionDate: watch("acquisitionDate"),
         price:           watch("price"),
         locationLabel:   locations.find(l => l.id === locationId)?.shelfCode
@@ -152,6 +153,19 @@ export default function AddItemDialog({ open, onClose, onSuccess, workId, workTi
                                 </div>
                             </div>
 
+
+                            <label className="flex items-start gap-2 text-sm cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    className="mt-0.5 h-4 w-4 accent-primary"
+                                    {...register("notLoanable")}
+                                />
+                                <span>
+                                    Prestito non consentito
+                                    <span className="block text-xs text-muted-foreground">Solo consultazione in sede (dizionari, enciclopedie...)</span>
+                                </span>
+                            </label>
+
                             <DialogFooter>
                                 <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
                                     Annulla
@@ -193,6 +207,11 @@ export default function AddItemDialog({ open, onClose, onSuccess, workId, workTi
                                 icon={Bookmark}
                                 label={"Collocazione"}
                                 value={summaryData.shelfMark?.trim() || "Non specificata"}
+                            />
+                            <SummaryRow
+                                icon={BookLock}
+                                label={"Prestito"}
+                                value={summaryData.notLoanable ? "Non consentito (solo consultazione)" : "Consentito"}
                             />
                             <SummaryRow
                                 icon={MapPin}

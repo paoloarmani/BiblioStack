@@ -20,6 +20,7 @@ export function useAddItem(workId, open) {
             id: "",
             locationId: null,
             shelfMark: "",
+            notLoanable: false,
             currencyCode: null,
             acquisitionDate: new Date().toISOString().split("T")[0],
             price: null,
@@ -44,8 +45,10 @@ export function useAddItem(workId, open) {
         const values = form.getValues();
         setLoading(true);
         try {
+            const { notLoanable, ...rest } = values;
             await api.post("/items", {
-                ...values,
+                ...rest,
+                loanable: !notLoanable,
                 workId,
                 locationId: values.locationId || null,
                 shelfMark: values.shelfMark?.trim() || null,
@@ -61,6 +64,7 @@ export function useAddItem(workId, open) {
                 id: "",
                 locationId: null,
                 shelfMark: "",
+                notLoanable: false,
                 currencyCode: null,
                 acquisitionDate: new Date().toISOString().split("T")[0],
                 price: null,

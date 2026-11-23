@@ -24,6 +24,7 @@ import suspensionRoutes from "./routes/suspension.routes.js";
 import locationRoutes from "./routes/location.routes.js";
 import contributionRoutes from "./routes/contribution.routes.js";
 import genreRoutes from "./routes/genre.routes.js";
+import subjectRoutes from "./routes/subject.routes.js";
 import languageRoutes from "./routes/language.routes.js";
 import publisherRoutes from "./routes/publisher.routes.js";
 import currencyRoutes from "./routes/currency.routes.js";
@@ -93,6 +94,7 @@ app.use("/api/locations", locationRoutes)
 app.use("/api/contributions", contributionRoutes)
 
 app.use("/api/genres", genreRoutes)
+app.use("/api/subjects", subjectRoutes)
 
 app.use("/api/languages", languageRoutes)
 

@@ -40,6 +40,9 @@ export default function WorkDetail({ work, loading, error, refetch }) {
     const isAdmin = user?.role === "admin";
     const authors = work.authors?.map(a => `${a.firstName} ${a.lastName}`).join(", ") || "—";
     const available = work.availableCount ?? 0;
+    const referenceOnly = work.referenceOnlyCount ?? 0;
+    // Opera con sole copie di consultazione: non si presta e non si prenota
+    const consultationOnly = (work.loanableCount ?? 0) === 0 && referenceOnly > 0;
 
 
     const handleDeleteItem = async (itemId) => {
@@ -74,15 +77,39 @@ export default function WorkDetail({ work, loading, error, refetch }) {
                         </div>
                     )}
 
+                    {/* Soggetti (argomenti trattati) */}
+                    {work.subjects?.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Soggetti:</span>
+                            {work.subjects.map(s => (
+                                <Badge key={s.id} variant="outline">
+                                    {s.name}
+                                </Badge>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Prenota */}
                     <div className="flex items-center gap-8 flex-wrap">
-                        <div
-                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium w-fit ${available > 0 ? "bg-success/20 text-success" : "bg-destructive/10 text-destructive"}`}>
-                            <div className={`h-2 w-2 rounded-full ${available > 0 ? "bg-success" : "bg-destructive"}`}/>
-                            {available > 0 ? `${available} cop${available === 1 ? "ia disponibile" : "ie disponibili"}` : "Non disponibile"}
-                        </div>
+                        {consultationOnly ? (
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium w-fit bg-secondary text-secondary-foreground">
+                                <div className="h-2 w-2 rounded-full bg-muted-foreground"/>
+                                Solo consultazione in sede
+                            </div>
+                        ) : (
+                            <div
+                                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium w-fit ${available > 0 ? "bg-success/20 text-success" : "bg-destructive/10 text-destructive"}`}>
+                                <div className={`h-2 w-2 rounded-full ${available > 0 ? "bg-success" : "bg-destructive"}`}/>
+                                {available > 0 ? `${available} cop${available === 1 ? "ia disponibile" : "ie disponibili"}` : "Non disponibile"}
+                            </div>
+                        )}
+                        {!consultationOnly && referenceOnly > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                                + {referenceOnly} cop{referenceOnly === 1 ? "ia" : "ie"} solo in consultazione
+                            </span>
+                        )}
 
-                        {isAuthenticated && <WorkReservationButton work={work}/>}
+                        {isAuthenticated && !consultationOnly && <WorkReservationButton work={work}/>}
                     </div>
 
                     <DetailWorkInfoGrid work={work}/>

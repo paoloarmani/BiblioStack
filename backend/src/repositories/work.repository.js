@@ -1,9 +1,15 @@
 import { db } from "../db/connection.js";
-import { works, authors, authorWorks, workGenres, items, loans, itemAvailability } from "../db/schema.js";
+import { works, authors, authorWorks, workGenres, items, loans, itemAvailability, subjects, workSubjects } from "../db/schema.js";
+import { itemRepository } from "./item.repository.js";
 import { eq, ilike, or, and, sql, asc, desc, count } from "drizzle-orm";
 import { normalizeSearch } from "../utils/search.util.js";
 import { userSelect } from "./presets/user.preset.js";
 import { RESERVATION_STATUS } from "../constants.js";
+
+// Condizione "l'opera ha un soggetto che corrisponde al pattern": EXISTS evita di moltiplicare le righe con un join
+const subjectMatch = (pattern) => sql`EXISTS (
+    SELECT 1 FROM ${workSubjects} JOIN ${subjects} ON ${subjects.id} = ${workSubjects.subjectId}
+    WHERE ${workSubjects.workId} = ${works.id} AND ${subjects.name} ILIKE ${pattern})`;
 
 // Query base condivisa per findById e findByIdForStaff
 const fetchWorkWithRelations = (id, { withLocation = false, withReservations = false } = {}, tx = db) =>
@@ -12,6 +18,7 @@ const fetchWorkWithRelations = (id, { withLocation = false, withReservations = f
         with: {
             authors: true,
             genres: true,
+            subjects: { orderBy: { name: "asc" } },
             publisher: true,
             language: true,
             dewey: true,
@@ -49,19 +56,20 @@ export const workRepository = {
     },
 
     findById: async (id, tx = db) => {
-        const [work, availableCount] = await Promise.all([
+        const [work, availableCount, counts] = await Promise.all([
             // Richiamo la query base senza passare with locations (quindi resta false e non lo ricevo)
             fetchWorkWithRelations(id, {}, tx),
             // Conto il numero di copie disponibili
-            tx.$count(itemAvailability, eq(itemAvailability.workId, id))
+            tx.$count(itemAvailability, eq(itemAvailability.workId, id)),
+            itemRepository.countActiveByWorkId(id, tx)
         ]);
 
         if (!work) return null;
-        return { ...work, availableCount };
+        return { ...work, availableCount, loanableCount: counts.loanable, referenceOnlyCount: counts.referenceOnly };
     },
 
     findByIdForStaff: async (id, tx = db) => {
-        const [work, availableCount, availableIds] = await Promise.all([
+        const [work, availableCount, availableIds, counts] = await Promise.all([
             // Chiamo la query base richiedendo anche la locazione
             fetchWorkWithRelations(id, { withLocation: true, withReservations: true }, tx),
             // Conto le copie disponibili
@@ -69,7 +77,8 @@ export const workRepository = {
             tx
                 .select({ itemId: itemAvailability.itemId })
                 .from(itemAvailability)
-                .where(eq(itemAvailability.workId, id))
+                .where(eq(itemAvailability.workId, id)),
+            itemRepository.countActiveByWorkId(id, tx)
         ]);
 
         if (!work) return null;
@@ -79,6 +88,8 @@ export const workRepository = {
         return {
             ...work,
             availableCount,
+            loanableCount: counts.loanable,
+            referenceOnlyCount: counts.referenceOnly,
             items: work.items.map(item => ({
                 ...item,
                 available: availableSet.has(item.id)
@@ -132,7 +143,7 @@ export const workRepository = {
 
 
     // Query per searchbar principale (navbar)
-    search: async ({ search, page, limit, genreId, languageCode, publisherId, deweyCode }) => {
+    search: async ({ search, page, limit, genreId, subjectId, languageCode, publisherId, deweyCode }) => {
         // Calcolo offset per la paginazione
         const offset = (page - 1) * limit;
 
@@ -155,6 +166,8 @@ export const workRepository = {
                     WHEN ${works.title} ILIKE ${'%' + term + '%'}                                   THEN 60
                     WHEN ${authors.lastName} ILIKE ${'%' + term + '%'}                              THEN 50
                     WHEN ${authors.firstName} ILIKE ${'%' + term + '%'}                             THEN 45
+                    WHEN ${subjectMatch(term)}                                                      THEN 40
+                    WHEN ${subjectMatch('%' + term + '%')}                                          THEN 30
                     ELSE 10
                 END
             `.as("relevance")
@@ -172,10 +185,12 @@ export const workRepository = {
             ilike(authors.lastName, pattern),
             sql`(${authors.firstName} || ' ' || ${authors.lastName}) ILIKE ${pattern}`,
             sql`(${authors.lastName} || ' ' || ${authors.firstName}) ILIKE ${pattern}`,
+            subjectMatch(pattern),
         ];
 
         const filterConditions = [
             genreId      ? eq(workGenres.genreId, genreId)         : null,
+            subjectId    ? sql`EXISTS (SELECT 1 FROM ${workSubjects} WHERE ${workSubjects.workId} = ${works.id} AND ${workSubjects.subjectId} = ${subjectId})` : null,
             languageCode ? eq(works.languageCode, languageCode)    : null,
             publisherId  ? eq(works.publisherId, publisherId)      : null,
             deweyCode    ? ilike(works.deweyCode, deweyCode + '%') : null,

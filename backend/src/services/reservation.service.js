@@ -155,6 +155,12 @@ export const reservationService = {
                     throw new AppError("Double booking is not allowed", "ALREADY_RESERVED", 400);
                 }
 
+                // Opera con sole copie di consultazione: la prenotazione resterebbe in attesa per sempre
+                const counts = await itemRepository.countActiveByWorkId(data.workId, tx);
+                if (counts.loanable === 0 && counts.referenceOnly > 0) {
+                    throw new AppError("This work is for in-library use only", "WORK_NOT_LOANABLE", 409);
+                }
+
                 // Controllo se ci sono copie disponibili per l'opera
                 const availableItem = await itemRepository.findAvailableByWorkId(data.workId, tx);
                 const status = availableItem ? RESERVATION_STATUS.READY : RESERVATION_STATUS.PENDING;

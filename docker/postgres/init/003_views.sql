@@ -8,6 +8,7 @@ SELECT
 FROM items i
 WHERE
     i.status = 'active'
+    AND i.loanable -- le copie di sola consultazione non sono mai prestabili né prenotabili
     AND NOT EXISTS (
         SELECT 1 FROM loans l
         WHERE l.item_id = i.id

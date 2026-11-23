@@ -16,7 +16,8 @@ import {
     date,
     numeric,
     primaryKey,
-    check, uniqueIndex
+    check, uniqueIndex,
+    boolean
 } from 'drizzle-orm/pg-core';
 
 import { sql } from 'drizzle-orm';
@@ -105,6 +106,12 @@ export const genres = pgTable('genres', {
     name: text('name').notNull().unique()
 });
 
+// Soggetti: argomenti trattati da un'opera (diversi dal genere, che indica il tipo di opera)
+export const subjects = pgTable('subjects', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    name: text('name').notNull().unique()
+});
+
 export const noticeTypes = pgTable('notice_types', {
     id: smallint('id').primaryKey().generatedAlwaysAsIdentity(),
     name: text('name').notNull().unique()
@@ -152,6 +159,8 @@ export const items = pgTable('items', {
     status: itemStatusEnum('status').notNull().default('active'),
     // Collocazione completa della copia (es. "A1 I 3"); location indica solo lo scaffale
     shelfMark: text('shelf_mark').unique('items_shelf_mark_key'),
+    // false = prestito non consentito (solo consultazione in sede: dizionari, enciclopedie...)
+    loanable: boolean('loanable').notNull().default(true),
     acquisitionDate: date('acquisition_date', {mode: 'date'}),
     price: numeric('price', { precision: 12, scale: 2 })
 });
@@ -172,6 +181,13 @@ export const workGenres = pgTable('work_genres', {
     genreId: smallint('genre_id').notNull().references(() => genres.id, { onDelete: 'cascade' }),
 }, (table) => [
     primaryKey({ columns: [table.workId, table.genreId] })
+]);
+
+export const workSubjects = pgTable('work_subjects', {
+    workId: text('work_id').notNull().references(() => works.id, { onDelete: 'cascade' }),
+    subjectId: integer('subject_id').notNull().references(() => subjects.id, { onDelete: 'cascade' }),
+}, (table) => [
+    primaryKey({ columns: [table.workId, table.subjectId] })
 ]);
 
 

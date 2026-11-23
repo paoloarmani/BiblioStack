@@ -46,6 +46,11 @@ export const relations = defineRelations(schema, (r) => ({
         genres: r.many.genres({
             from: r.works.id.through(r.workGenres.workId),
             to: r.genres.id.through(r.workGenres.genreId)
+        }),
+        // Collegamento (N-N) con la tabella Subjects passando per WorkSubjects (argomenti trattati dall'opera)
+        subjects: r.many.subjects({
+            from: r.works.id.through(r.workSubjects.workId),
+            to: r.subjects.id.through(r.workSubjects.subjectId)
         })
     },
 

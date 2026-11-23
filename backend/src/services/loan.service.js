@@ -57,6 +57,14 @@ export const loanService = {
         if (!item) throw new AppError("Item not found", "NOT_FOUND", 404);
         if (!patron) throw new AppError("User not found", "NOT_FOUND", 404);
 
+        // Copie smarrite/danneggiate o di sola consultazione non si prestano
+        if (item.status !== "active") {
+            throw new AppError("Item is not available (damaged or lost)", "ITEM_NOT_AVAILABLE", 409);
+        }
+        if (!item.loanable) {
+            throw new AppError("Item is for in-library use only", "ITEM_NOT_LOANABLE", 409);
+        }
+
         // Controllo se l'utente è sospeso
         if (patron.suspension) {
             throw new AppError("User is suspended and cannot perform this action", "USER_SUSPENDED", 403);
