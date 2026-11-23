@@ -43,9 +43,11 @@ const trustProxyHops = process.env.NODE_ENV === "production"
 app.set("trust proxy", trustProxyHops);
 
 // Origini autorizzate a effettuare richieste cross-origin
-const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? ['https://urlreale'] // da cambiare in produzione
-    : [process.env.FRONTEND_URL]; // frontend locale
+// FRONTEND_URL può contenere più indirizzi separati da virgola (es. "https://biblioteca.scuola.it,https://192.168.1.10")
+const allowedOrigins = (process.env.FRONTEND_URL ?? "")
+    .split(",")
+    .map((url) => url.trim().replace(/\/$/, ""))
+    .filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {

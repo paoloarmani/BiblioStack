@@ -6,6 +6,7 @@ dist
 # Variabili d'ambiente (gli esempi restano versionati)
 .env
 .env.dev
+.env.prod
 
 # IDE / OS
 .idea/

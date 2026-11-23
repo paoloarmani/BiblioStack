@@ -1,0 +1,40 @@
+# Server web di produzione di BiblioStack (usato dal target "prod" del Dockerfile).
+#
+# SITE_ADDRESS decide il certificato HTTPS:
+#   - un dominio pubblico (biblioteca.scuola.it) -> certificato Let's Encrypt automatico
+#     (le porte 80 e 443 devono essere raggiungibili da Internet)
+#   - localhost o un indirizzo IP (https://192.168.1.10) -> certificato interno di Caddy, utile per
+#     provare in rete locale (il browser chiederà di accettarlo)
+#   - :80 -> solo HTTP, quando l'HTTPS è gestito da un proxy esterno (impostare TRUST_PROXY_HOPS=2)
+
+{$SITE_ADDRESS:localhost} {
+	encode zstd gzip
+
+	# API: stesso dominio del frontend, quindi niente CORS e cookie di prima parte
+	handle /api/* {
+		reverse_proxy backend:5001
+	}
+
+	# Applicazione React (SPA): ogni percorso sconosciuto torna a index.html
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	# I file in /assets hanno l'hash nel nome: si possono mettere in cache per sempre
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

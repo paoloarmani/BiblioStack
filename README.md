@@ -52,6 +52,36 @@ girare in container. Sull'host serve solo Docker con il plugin `docker compose`.
 
 Su Windows usare WSL2 oppure Git Bash per lanciare lo script.
 
+## Messa in produzione con Docker
+
+`docker/compose.prod.yml` avvia la versione compilata:
+
+| Servizio | Ruolo | Esposto |
+|---|---|---|
+| `web` | Caddy: serve la build del frontend, inoltra `/api` al backend e gestisce HTTPS | porte 80/443 |
+| `backend` | Node con le sole dipendenze di produzione | no |
+| `db`, `redis` | PostgreSQL e Redis, con i dati in volumi Docker | no |
+
+```bash
+cp docker/.env.prod.example docker/.env.prod   # compilare dominio, password e segreti
+./bibliostack.sh prod up                       # build e avvio
+./bibliostack.sh prod admin admin@scuola.it    # primo amministratore (password chiesta a terminale)
+```
+
+- **HTTPS è obbligatorio**, perché i cookie di sessione in produzione sono `secure`.
+  `SITE_ADDRESS` decide come ottenerlo:
+  - un dominio pubblico ottiene un certificato Let's Encrypt automatico (le porte 80 e 443 devono essere raggiungibili);
+  - `localhost` o un IP usano il certificato interno di Caddy, utile per le prove in rete locale;
+  - `:80` lascia l'HTTPS a un proxy esterno (in quel caso impostare `TRUST_PROXY_HOPS=2`).
+- Il frontend chiama l'API sullo stesso dominio (`/api`), quindi non serve CORS.
+  `PUBLIC_URL` deve comunque essere l'indirizzo con cui gli utenti aprono l'app:
+  viene usato per i link nelle email.
+- Gli script `docker/postgres/init/*.sql` creano lo schema alla prima creazione del volume.
+  In produzione non va caricato il seed demo. Per importare un catalogo esistente:
+  `./bibliostack.sh prod import-catalogo catalogo.sql`.
+- Backup: `./bibliostack.sh prod backup` produce un dump compresso del database.
+  Aggiornamenti: `git pull && ./bibliostack.sh prod up`.
+
 ## Istruzioni di installazione (manuale)
 
 ### Prerequisiti
