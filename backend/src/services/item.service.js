@@ -1,6 +1,20 @@
 import { itemRepository } from "../repositories/item.repository.js";
 import { AppError } from "../utils/appError.js";
-import {getConstraint, isForeignKeyViolation} from "../utils/db.util.js";
+import { getConstraint, isForeignKeyViolation, isUniqueViolation } from "../utils/db.util.js";
+
+// Traduce le violazioni di unicità (id copia o collocazione già usati) in errori 409 leggibili dal frontend
+const rethrowUniqueViolation = (error) => {
+    if (isUniqueViolation(error)) {
+        const constraint = getConstraint(error);
+        if (constraint === "items_pkey") {
+            throw new AppError("Item id already in use", "ITEM_ID_TAKEN", 409);
+        }
+        if (constraint === "items_shelf_mark_key") {
+            throw new AppError("Shelf mark already assigned to another item", "SHELF_MARK_TAKEN", 409);
+        }
+    }
+    throw error;
+};
 
 const findUniqueOrThrow = async (id) => {
     const item = await itemRepository.findById(id);
@@ -17,14 +31,22 @@ export const itemService = {
         await findUniqueOrThrow(id),
 
     create: async (data) => {
-        const [item] = await itemRepository.create(data);
-        return item;
+        try {
+            const [item] = await itemRepository.create(data);
+            return item;
+        } catch (error) {
+            rethrowUniqueViolation(error);
+        }
     },
 
     update: async (id, data) => {
         await findUniqueOrThrow(id);
-        const [updatedItem] = await itemRepository.update(id, data);
-        return updatedItem;
+        try {
+            const [updatedItem] = await itemRepository.update(id, data);
+            return updatedItem;
+        } catch (error) {
+            rethrowUniqueViolation(error);
+        }
     },
 
     delete: async (id) => {

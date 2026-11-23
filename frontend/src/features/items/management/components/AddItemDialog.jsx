@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Controller } from "react-hook-form";
-import { Loader2, Hash, MapPin, Calendar, Euro } from "lucide-react";
+import { Loader2, Hash, MapPin, Calendar, Euro, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button.jsx";
 import { Input } from "@/components/ui/input.jsx";
 import { Label } from "@/components/ui/label.jsx";
@@ -65,6 +65,7 @@ export default function AddItemDialog({ open, onClose, onSuccess, workId, workTi
     const locationId = watch("locationId");
     const summaryData = {
         id:              watch("id"),
+        shelfMark:       watch("shelfMark"),
         acquisitionDate: watch("acquisitionDate"),
         price:           watch("price"),
         locationLabel:   locations.find(l => l.id === locationId)?.shelfCode
@@ -97,7 +98,16 @@ export default function AddItemDialog({ open, onClose, onSuccess, workId, workTi
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label>Posizione</Label>
+                                <Label>Collocazione</Label>
+                                <Input
+                                    placeholder="es. A1 I 3"
+                                    {...register("shelfMark")}
+                                />
+                                <FieldError message={errors.shelfMark?.message} />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label>Scaffale</Label>
                                 <Controller
                                     name={"locationId"}
                                     control={control}
@@ -180,8 +190,13 @@ export default function AddItemDialog({ open, onClose, onSuccess, workId, workTi
                                 value={summaryData.id}
                             />
                             <SummaryRow
+                                icon={Bookmark}
+                                label={"Collocazione"}
+                                value={summaryData.shelfMark?.trim() || "Non specificata"}
+                            />
+                            <SummaryRow
                                 icon={MapPin}
-                                label={"Posizione"}
+                                label={"Scaffale"}
                                 value={summaryData.locationLabel || "Non specificata"}
                             />
                             <SummaryRow

@@ -36,6 +36,14 @@ export function handleApiError(error, navigate) {
             notify.error("Non hai i permessi per eseguire questa operazione");
             break;
 
+        case "ITEM_ID_TAKEN":
+            notify.error("Esiste già una copia con questo codice inventario");
+            break;
+
+        case "SHELF_MARK_TAKEN":
+            notify.error("Questa collocazione è già assegnata a un'altra copia");
+            break;
+
         case "ITEM_HAS_DIPENDENCIES":
             notify.error("Non puoi eliminare l'opera perché è associata a uno o più prestiti");
             break;

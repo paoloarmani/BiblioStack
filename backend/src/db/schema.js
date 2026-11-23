@@ -150,8 +150,9 @@ export const items = pgTable('items', {
     locationId: integer('location_id').references(() => locations.id, { onDelete: 'set null' }),
     currencyCode: char('currency_code', { length: 3 }).references(() => currencies.code, { onUpdate: 'cascade' }),
     status: itemStatusEnum('status').notNull().default('active'),
+    // Collocazione completa della copia (es. "A1 I 3"); location indica solo lo scaffale
+    shelfMark: text('shelf_mark').unique('items_shelf_mark_key'),
     acquisitionDate: date('acquisition_date', {mode: 'date'}),
-
     price: numeric('price', { precision: 12, scale: 2 })
 });
 

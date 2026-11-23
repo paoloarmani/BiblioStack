@@ -16,6 +16,7 @@ export function useEditItem(item, open, onSuccess) {
         resolver: zodResolver(editItemSchema),
         defaultValues: {
             locationId: null,
+            shelfMark: "",
             currencyCode: null,
             acquisitionDate: null,
             price: null,
@@ -28,6 +29,7 @@ export function useEditItem(item, open, onSuccess) {
         if (!item || !open) return;
         form.reset({
             locationId: item.location?.id ?? null,
+            shelfMark: item.shelfMark ?? "",
             currencyCode: item.currencyCode ?? null,
             acquisitionDate: item.acquisitionDate
                 ? new Date(item.acquisitionDate).toISOString().split("T")[0]
@@ -43,6 +45,7 @@ export function useEditItem(item, open, onSuccess) {
         try {
             await api.patch(`/items/${item.id}`, {
                 ...values,
+                shelfMark: values.shelfMark?.trim() || null,
                 price: values.price ? parseFloat(values.price) : null,
             });
 

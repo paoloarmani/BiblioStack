@@ -17,6 +17,7 @@ const LocationDTO = z.object({
 // Core del DTO
 const ItemCore = z.object ({
     id: z.string(),
+    shelfMark: z.string().nullable(),
     acquisitionDate: z.date().nullable(),
     status: ItemStatusSchema,
     price: z.coerce.number().nullable().optional()

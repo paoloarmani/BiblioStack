@@ -13,6 +13,7 @@ const GenreSchema = z.object({
 
 const ItemStaffSchema = z.object({
     id: z.string(),
+    shelfMark: z.string().nullable(),
     price: z.coerce.number().nullable(),
     acquisitionDate: z.date().nullable(),
     location: LocationBaseDTO.nullable(),

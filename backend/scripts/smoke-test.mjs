@@ -165,6 +165,25 @@ const main = async () => {
         expectStatus("DELETE /suspensions/:id (admin)", await admin.client("DELETE", `/suspensions/${susp.data.id}`), 200);
     }
 
+    section("Copie: collocazione univoca");
+    const smokeId = `SMOKE-${Date.now()}`;
+    const mark = `SMOKE ${Date.now()}`;
+    const created = await librarian.client("POST", "/items", { id: smokeId, workId: "ISBN-978-88-04-72232-0", shelfMark: mark });
+    expectStatus("POST /items con collocazione", created, 201);
+    if (created.status === 201) {
+        expectStatus("POST /items stessa collocazione → conflitto",
+            await librarian.client("POST", "/items", { id: `${smokeId}-B`, workId: "ISBN-978-88-04-72232-0", shelfMark: mark }), 409);
+        expectStatus("POST /items stesso codice inventario → conflitto",
+            await librarian.client("POST", "/items", { id: smokeId, workId: "ISBN-978-88-04-72232-0" }), 409);
+        expectStatus("PATCH /items/:id collocazione già usata → conflitto",
+            await librarian.client("PATCH", "/items/ITEM-001", { shelfMark: mark }), 409);
+        const detail = await librarian.client("GET", "/works/ISBN-978-88-04-72232-0");
+        detail.data?.items?.some((i) => i.id === smokeId && i.shelfMark === mark)
+            ? ok("collocazione visibile nel dettaglio opera (staff)")
+            : fail("collocazione assente nel dettaglio opera");
+        expectStatus("DELETE /items/:id (admin)", await admin.client("DELETE", `/items/${smokeId}`), 200);
+    }
+
     section("Logout");
     expectStatus("POST /auth/logout", await student.client("POST", "/auth/logout"), 200);
     expectStatus("POST /auth/refresh dopo logout", await student.client("POST", "/auth/refresh"), 401);

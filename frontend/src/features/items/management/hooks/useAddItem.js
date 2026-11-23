@@ -18,6 +18,7 @@ export function useAddItem(workId, open) {
         defaultValues: {
             id: "",
             locationId: null,
+            shelfMark: "",
             currencyCode: null,
             acquisitionDate: new Date().toISOString().split("T")[0],
             price: null,
@@ -47,6 +48,7 @@ export function useAddItem(workId, open) {
                 ...values,
                 workId,
                 locationId: values.locationId || null,
+                shelfMark: values.shelfMark?.trim() || null,
                 currencyCode: values.currencyCode || null,
                 acquisitionDate: values.acquisitionDate || null,
                 price: values.price ? parseFloat(values.price) : null,
@@ -58,6 +60,7 @@ export function useAddItem(workId, open) {
             form.reset({
                 id: "",
                 locationId: null,
+                shelfMark: "",
                 currencyCode: null,
                 acquisitionDate: new Date().toISOString().split("T")[0],
                 price: null,

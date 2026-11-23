@@ -1,4 +1,4 @@
-import { School, MapPin } from "lucide-react";
+import { School, MapPin, Bookmark } from "lucide-react";
 import { ItemTableActions } from "@/features/items/management/components/ItemTableActions.jsx";
 
 function formatDate(date) {
@@ -41,9 +41,19 @@ export const getStaffItemsColumns = ({ isAdmin = false, onEdit, onDelete } = {})
             cell: ({ getValue }) => <span className="font-mono text-sm">{getValue()}</span>,
         },
         {
+            accessorKey: "shelfMark",
+            header: "Collocazione",
+            cell: ({ getValue }) => (
+                <span className="flex items-center gap-1 font-mono text-sm">
+                    <Bookmark className="h-3.5 w-3.5" />
+                    {getValue() ?? "—"}
+                </span>
+            ),
+        },
+        {
             id: "shelfCode",
             accessorFn: (row) => row.location?.shelfCode ?? null,
-            header: "Collocazione",
+            header: "Scaffale",
             cell: ({ getValue }) => (
                 <span className="flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />

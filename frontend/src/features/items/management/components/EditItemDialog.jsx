@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, Euro, MapPin, CircleCheck } from "lucide-react";
+import { Calendar, Euro, MapPin, CircleCheck, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button.jsx";
 import { Input } from "@/components/ui/input.jsx";
 import { Label } from "@/components/ui/label.jsx";
@@ -59,6 +59,7 @@ export default function EditItemDialog({ item, open, onClose, onConfirm }) {
     // Build dei dati per il riepilogo
     const locationId = watch("locationId");
     const summaryData = {
+        shelfMark: watch("shelfMark"),
         acquisitionDate: watch("acquisitionDate"),
         price: watch("price"),
         locationLabel: locations.find(l => l.id === locationId)?.shelfCode ?? (locationId ? `Scaffale ${locationId}` : null),
@@ -103,7 +104,19 @@ export default function EditItemDialog({ item, open, onClose, onConfirm }) {
                         </div>
 
                         <div className="flex flex-col gap-2">
-                            <Label>Collocazione</Label>
+                            <Label htmlFor="shelfMark">Collocazione</Label>
+                            <Input
+                                id="shelfMark"
+                                {...register("shelfMark")}
+                                placeholder="es. A1 I 3"
+                            />
+                            {errors.shelfMark && (
+                                <span className="text-xs text-destructive">{errors.shelfMark.message}</span>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <Label>Scaffale</Label>
                             {locationsLoading ? (
                                 <div className="h-9 rounded-md bg-secondary animate-pulse" />
                             ) : (
@@ -185,8 +198,13 @@ export default function EditItemDialog({ item, open, onClose, onConfirm }) {
             >
                 <div className="space-y-3 py-2">
                     <SummaryRow
-                        icon={MapPin}
+                        icon={Bookmark}
                         label="Collocazione"
+                        value={summaryData.shelfMark?.trim() || "Non specificata"}
+                    />
+                    <SummaryRow
+                        icon={MapPin}
+                        label="Scaffale"
                         value={summaryData.locationLabel || "Non specificata"}
                     />
                     <SummaryRow
