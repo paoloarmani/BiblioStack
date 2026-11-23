@@ -235,6 +235,16 @@ const main = async () => {
     }), 409);
     await librarian.client("PATCH", "/items/ITEM-001", { status: "active" });
 
+    // Prestito dalla gestione opere: lo staff cerca l'utente e vede le copie disponibili nelle liste
+    const found2 = await librarian.client("GET", "/users/search?search=verdi");
+    expectStatus("GET /users/search (bibliotecario)", found2, 200);
+    expectStatus("GET /users/search (studente → vietato)", await student.client("GET", "/users/search?search=verdi"), 403);
+    expectStatus("GET /users/:id (bibliotecario)", await librarian.client("GET", `/users/${luca.user.id}`), 200);
+    const list = await anon("GET", "/works?limit=5");
+    list.data?.every?.((w) => typeof w.copies?.available === "number" && typeof w.copies?.total === "number")
+        ? ok("GET /works include il riepilogo copie (disponibili/totali)")
+        : fail(`riepilogo copie assente: ${JSON.stringify(list.data?.[0]).slice(0, 150)}`);
+
     section("Logout");
     expectStatus("POST /auth/logout", await student.client("POST", "/auth/logout"), 200);
     expectStatus("POST /auth/refresh dopo logout", await student.client("POST", "/auth/refresh"), 401);

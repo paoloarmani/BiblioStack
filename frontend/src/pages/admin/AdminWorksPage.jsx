@@ -9,7 +9,7 @@ export default function AdminWorksPage() {
     const {
         works, loading, hasMore, page, search,
         setSearch, setPage,
-        deleteWork, updateWork
+        deleteWork, updateWork, reload
     } = useAdminWorks()
 
     return (
@@ -25,6 +25,7 @@ export default function AdminWorksPage() {
                 loading={loading}
                 onDelete={deleteWork}
                 onEdit={updateWork}
+                onChanged={reload}
             />
             <TablePagination
                 page={page}

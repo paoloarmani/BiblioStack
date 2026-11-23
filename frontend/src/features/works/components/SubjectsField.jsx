@@ -124,7 +124,7 @@ export default function SubjectsField({ value = [], onChange, error }) {
                                 role="option"
                                 aria-selected={i === highlight}
                                 onMouseDown={(e) => { e.preventDefault(); add(s.name); }}
-                                className={`cursor-pointer rounded px-2 py-1.5 ${i === highlight ? "bg-accent text-accent-foreground" : "hover:bg-accent"}`}
+                                className={`cursor-pointer rounded px-2 py-1.5 ${i === highlight ? "bg-primary/10 text-foreground" : "hover:bg-secondary"}`}
                             >
                                 {s.name}
                             </li>
@@ -134,7 +134,7 @@ export default function SubjectsField({ value = [], onChange, error }) {
                                 role="option"
                                 aria-selected={false}
                                 onMouseDown={(e) => { e.preventDefault(); add(text); }}
-                                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-muted-foreground hover:bg-accent"
+                                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-muted-foreground hover:bg-secondary"
                             >
                                 <Plus className="h-3.5 w-3.5" />
                                 Crea «{text.trim()}»

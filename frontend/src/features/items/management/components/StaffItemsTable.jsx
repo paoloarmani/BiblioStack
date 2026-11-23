@@ -3,8 +3,8 @@ import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-tabl
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.jsx";
 import { getStaffItemsColumns } from "@/features/items/management/components/StaffItemsColumns.jsx";
 
-export default function StaffItemsTable({ items, isAdmin = false, onEdit, onDelete }) {
-    const columns = getStaffItemsColumns({ isAdmin, onEdit, onDelete });
+export default function StaffItemsTable({ items, work, isAdmin = false, onEdit, onDelete }) {
+    const columns = getStaffItemsColumns({ isAdmin, work, onEdit, onDelete });
 
     const table = useReactTable({
         data: items,
@@ -18,7 +18,7 @@ export default function StaffItemsTable({ items, isAdmin = false, onEdit, onDele
                 Copie ({items.length})
             </h2>
 
-            <div className="rounded-xl border border-border overflow-hidden">
+            <div className="rounded-xl border border-border overflow-x-auto">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map(hg => (

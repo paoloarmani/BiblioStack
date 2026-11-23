@@ -151,7 +151,7 @@ export default function WorkDetail({ work, loading, error, refetch }) {
 
             {isStaff && work.items?.length > 0 && (
                 <>
-                    <StaffItemsTable items={work.items} isAdmin={isAdmin} onEdit={refetch} onDelete={handleDeleteItem}/>
+                    <StaffItemsTable items={work.items} work={work} isAdmin={isAdmin} onEdit={refetch} onDelete={handleDeleteItem}/>
                     <WorkReservationQueue reservations={work.activeReservations}/>
                 </>
             )}

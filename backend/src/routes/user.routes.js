@@ -9,7 +9,8 @@ const router = express.Router();
 
 
 // GET /users/search?name=marco?page=1&limit=20
-router.get("/search", paginationMiddleware, verifyUser, permit( "admin"), userController.search);
+// Lo staff cerca gli utenti a cui prestare un libro
+router.get("/search", paginationMiddleware, verifyUser, permit("admin", "librarian"), userController.search);
 
 // GET /users/me/dashboard -> Serve per visualizzare la dashboard personale
 router.get("/me/dashboard", verifyUser, userController.getMyDashboard);
@@ -21,7 +22,8 @@ router.get("/:id/dashboard", verifyUser, permit("admin"), validateIdParam, userC
 router.get("/", paginationMiddleware,verifyUser, permit( "admin"), userController.getAll);
 
 // GET /users/:id
-router.get("/:id", verifyUser, permit( "admin"), validateIdParam, userController.getById);
+// Lettura del singolo utente anche per il bibliotecario (verifica della tessera nel dialog prestiti)
+router.get("/:id", verifyUser, permit("admin", "librarian"), validateIdParam, userController.getById);
 
 
 //POST /users

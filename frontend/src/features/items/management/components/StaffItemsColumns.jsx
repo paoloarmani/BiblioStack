@@ -18,7 +18,7 @@ function formatPrice(price) {
     }).format(price);
 }
 
-export const getStaffItemsColumns = ({ isAdmin = false, onEdit, onDelete } = {}) => {
+export const getStaffItemsColumns = ({ isAdmin = false, work, onEdit, onDelete } = {}) => {
     const columns = [
         {
             accessorKey: "available",
@@ -101,15 +101,14 @@ export const getStaffItemsColumns = ({ isAdmin = false, onEdit, onDelete } = {})
         },
     ];
 
-    if (isAdmin) {
-        columns.push({
-            id: "actions",
-            header: "",
-            cell: ({ row }) => (
-                <ItemTableActions item={row.original} onEdit={onEdit} onDelete={onDelete} />
-            ),
-        });
-    }
+    // Azioni per tutto lo staff (presta, modifica); l'eliminazione resta all'admin
+    columns.push({
+        id: "actions",
+        header: "",
+        cell: ({ row }) => (
+            <ItemTableActions item={row.original} work={work} isAdmin={isAdmin} onEdit={onEdit} onDelete={onDelete} />
+        ),
+    });
 
     return columns;
 };

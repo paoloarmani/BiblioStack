@@ -1,7 +1,7 @@
 import { db } from "../db/connection.js";
 import { works, authors, authorWorks, workGenres, items, loans, itemAvailability, subjects, workSubjects } from "../db/schema.js";
 import { itemRepository } from "./item.repository.js";
-import { eq, ilike, or, and, sql, asc, desc, count } from "drizzle-orm";
+import { eq, ilike, or, and, sql, asc, desc, count, ne, inArray } from "drizzle-orm";
 import { normalizeSearch } from "../utils/search.util.js";
 import { userSelect } from "./presets/user.preset.js";
 import { RESERVATION_STATUS } from "../constants.js";
@@ -10,6 +10,24 @@ import { RESERVATION_STATUS } from "../constants.js";
 const subjectMatch = (pattern) => sql`EXISTS (
     SELECT 1 FROM ${workSubjects} JOIN ${subjects} ON ${subjects.id} = ${workSubjects.subjectId}
     WHERE ${workSubjects.workId} = ${works.id} AND ${subjects.name} ILIKE ${pattern})`;
+
+// Aggiunge a una lista di opere il numero di copie (non smarrite) e quante sono disponibili al prestito.
+// Due query aggregate per tutta la pagina, invece di una per opera.
+const withCopyCounts = async (list) => {
+    if (list.length === 0) return list;
+    const ids = list.map(w => w.id);
+    const [totals, available] = await Promise.all([
+        db.select({ workId: items.workId, n: count() }).from(items)
+            .where(and(inArray(items.workId, ids), ne(items.status, "lost")))
+            .groupBy(items.workId),
+        db.select({ workId: itemAvailability.workId, n: count() }).from(itemAvailability)
+            .where(inArray(itemAvailability.workId, ids))
+            .groupBy(itemAvailability.workId)
+    ]);
+    const tot = new Map(totals.map(r => [r.workId, r.n]));
+    const av = new Map(available.map(r => [r.workId, r.n]));
+    return list.map(w => ({ ...w, copies: { total: tot.get(w.id) ?? 0, available: av.get(w.id) ?? 0 } }));
+};
 
 // Query base condivisa per findById e findByIdForStaff
 const fetchWorkWithRelations = (id, { withLocation = false, withReservations = false } = {}, tx = db) =>
@@ -45,14 +63,16 @@ export const workRepository = {
         // Calcolo offset per la paginazione SQL
         const offset = (page - 1) * limit;
 
-        return await db.query.works.findMany({
+        const list = await db.query.works.findMany({
             limit: limit,
             offset: offset,
+            orderBy: { title: "asc", id: "asc" }, // ordine stabile per la paginazione
             with: {
                 authors: true,
                 dewey: true
             }
         });
+        return await withCopyCounts(list);
     },
 
     findById: async (id, tx = db) => {
@@ -232,7 +252,7 @@ export const workRepository = {
 
         // Riordino secondo ranking originale
         const workMap = new Map(fullWorks.map(w => [w.id, w]));
-        return rankedIds.map(r => workMap.get(r.id)).filter(Boolean);
+        return await withCopyCounts(rankedIds.map(r => workMap.get(r.id)).filter(Boolean));
     },
 
     create: async (data) =>

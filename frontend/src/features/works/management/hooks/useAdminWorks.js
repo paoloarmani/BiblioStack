@@ -57,11 +57,9 @@ export function useAdminWorks() {
 
     const updateWork = async (workId, payload) => {
         try {
-            const { data } = await api.patch(`/works/${workId}`, payload)
-
-            setWorks(prev =>
-                prev.map(w => w.id === workId ? data : w)
-            )
+            await api.patch(`/works/${workId}`, payload)
+            // Ricarico la pagina: la risposta del PATCH non contiene il riepilogo delle copie
+            await fetchWorks()
 
             notify.success("Opera modificata con successo")
         } catch {
@@ -72,6 +70,7 @@ export function useAdminWorks() {
     return {
         works, loading, hasMore, page, search,
         setSearch, setPage,
-        updateWork, deleteWork
+        updateWork, deleteWork,
+        reload: fetchWorks
     }
 }

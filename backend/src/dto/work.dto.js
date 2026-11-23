@@ -85,8 +85,15 @@ const WorkDetailCommon = {
 
 /* ---------------- BASE ---------------- */
 
+// Copie non smarrite e quante sono disponibili al prestito (liste e ricerca)
+const CopiesSummarySchema = z.object({
+    total: z.number(),
+    available: z.number()
+});
+
 export const WorkBaseDTO = z.object({
     ...WorkCore,
+    copies: CopiesSummarySchema.optional(),
     coverUrl: z.string().optional().nullable(),
     authors: z.array(AuthorDTO).default([])
 });
@@ -123,6 +130,7 @@ export const WorkDetailStaffDTO = z.object({
 // DTO ottimizzato per la lista risultati search
 export const WorkSearchResultDTO = z.object({
     id: z.string(),
+    copies: CopiesSummarySchema.optional(),
     title: z.string(),
     publicationDate: z.date().nullable(),
     authors: z.array(AuthorDTO).default([]),
