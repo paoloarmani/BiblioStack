@@ -89,7 +89,7 @@ export default function EditWorkDialog({ work, open, onClose, onConfirm }) {
                     <DialogHeader>
                         <DialogTitle className="text-xl">Modifica opera</DialogTitle>
                         <DialogDescription className="sr-only">
-                            Modifica i dati dell'opera
+                            Modifica i dati dell’opera
                         </DialogDescription>
                     </DialogHeader>
 

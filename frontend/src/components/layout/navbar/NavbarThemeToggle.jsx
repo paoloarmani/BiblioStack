@@ -1,4 +1,4 @@
-import { useTheme } from "@/components/theme/theme-provider.jsx"
+import { useTheme } from "@/components/theme/use-theme.js"
 import {
     DropdownMenu,
     DropdownMenuContent,

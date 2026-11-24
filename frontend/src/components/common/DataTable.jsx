@@ -62,6 +62,7 @@ export default function DataTable({
 
                                       className = "",
                                   }) {
+    // eslint-disable-next-line react-hooks/incompatible-library -- useReactTable restituisce funzioni non memoizzabili da React Compiler: il componente resta semplicemente non ottimizzato
     const table = useReactTable({
         data,
         columns,

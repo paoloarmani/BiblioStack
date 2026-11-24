@@ -24,7 +24,7 @@ export function useUserDashboard() {
         }
 
         fetchDashboard();
-    }, []);
+    }, [navigate]);
 
     return { dashboard, loading, error };
 }

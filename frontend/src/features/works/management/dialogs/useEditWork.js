@@ -61,9 +61,18 @@ export function useEditWork(work, open) {
             }
         };
         fetchWork();
-        setPendingData(null);
-        setConfirmDialogOpen(false);
-    }, [work?.id, open]);
+    }, [work?.id, open, form, navigate]);
+
+    // All'apertura riparto senza riepilogo in sospeso (aggiornato durante il render, senza effetto)
+    const [prevOpenKey, setPrevOpenKey] = useState(null);
+    const openKey = open && work?.id ? work.id : null;
+    if (openKey !== prevOpenKey) {
+        setPrevOpenKey(openKey);
+        if (openKey) {
+            setPendingData(null);
+            setConfirmDialogOpen(false);
+        }
+    }
 
     // Intercetta il submit, valida e apre il riepilogo
     const handlePreSubmit = async (values) => {

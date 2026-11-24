@@ -39,7 +39,7 @@ export function useAddItem(workId, open) {
         };
 
         fetchLocations();
-    }, [open]);
+    }, [open, navigate]);
 
     const submit = async (onSuccess) => {
         const values = form.getValues();

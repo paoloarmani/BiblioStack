@@ -8,6 +8,16 @@ import { handleApiError } from "@/lib/handleApiError.js";
 import api from "@/api/axios.js";
 
 
+// Data in formato YYYY-MM-DD per gli input date (null se assente o non valida)
+const formatDate = (dateVal) => {
+    if (!dateVal) return null;
+    try {
+        return new Date(dateVal).toISOString().split("T")[0];
+    } catch {
+        return null;
+    }
+};
+
 export function useEditLoan(loan, open, onSuccess) {
     const [loading, setLoading] = useState(false);
 
@@ -22,15 +32,6 @@ export function useEditLoan(loan, open, onSuccess) {
         defaultValues: { dueDate: "", returnDate: null },
     });
 
-    const formatDate = (dateVal) => {
-        if (!dateVal) return null;
-        try {
-            return new Date(dateVal).toISOString().split("T")[0];
-        } catch {
-            return null;
-        }
-    };
-
     useEffect(() => {
         if (!loan || !open) return;
         form.reset({
@@ -39,7 +40,7 @@ export function useEditLoan(loan, open, onSuccess) {
         });
         setPendingData(null);
         setConfirmDialogOpen(false);
-    }, [loan, open]);
+    }, [loan, open, form]);
 
 
     // Intercetta il submit del form, valida e apre il dialog di riepilogo

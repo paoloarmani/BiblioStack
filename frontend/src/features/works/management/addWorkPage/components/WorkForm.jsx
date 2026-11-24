@@ -1,4 +1,4 @@
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input.jsx";
@@ -26,12 +26,12 @@ export default function WorkForm({ form: externalForm, onSubmit, loading }) {
     // Corretto mappando le variabili corrette dall'hook
     const { publicationCountries, loading: loadingPublicationCountries } = usePublicationCountries()
 
-    const { register, handleSubmit, control, watch, formState: { errors } } = useForm({
+    const { register, handleSubmit, control, formState: { errors } } = useForm({
         resolver: zodResolver(workFormSchema),
         values: externalForm,
     })
 
-    const coverUrl = watch("coverUrl")
+    const coverUrl = useWatch({ control, name: "coverUrl" })
 
     const handleValidSubmit = (data) => {
         onSubmit({

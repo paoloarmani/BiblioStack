@@ -24,7 +24,6 @@ export function useCardVerification() {
             const { data } = await api.post("/cards/verify", { token: parsed.data });
             setResult(data);
         } catch (error) {
-            const data = error.response?.data;
             /*
              - 401 con {valid: false} è l'esito di "tessera non valida"
              - 401/500/altro con {code} è un errore applicativo e lo gestisco con l'handler apposito

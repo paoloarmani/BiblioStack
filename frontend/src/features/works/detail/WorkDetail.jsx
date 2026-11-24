@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/useAuth.js";
 import { handleApiError } from "@/lib/handleApiError.js";
 import { notify } from "@/lib/notify.js";
 import { BookOpen, MapPin } from "lucide-react";
@@ -30,7 +30,7 @@ export default function WorkDetail({ work, loading, error, refetch }) {
                     </EmptyMedia>
                     <EmptyTitle>Opera non trovata</EmptyTitle>
                     <EmptyDescription>
-                        Il libro richiesto potrebbe essere stato rimosso o l'indirizzo non è corretto.
+                        Il libro richiesto potrebbe essere stato rimosso o l’indirizzo non è corretto.
                     </EmptyDescription>
                 </EmptyHeader>
             </Empty>

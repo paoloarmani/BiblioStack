@@ -22,7 +22,7 @@ export function useMyCard() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [navigate]);
 
     useEffect(() => { fetchCard() }, [fetchCard]);
 

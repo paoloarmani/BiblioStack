@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editUserSchema } from "@/features/users/management/dialogs/editUserDialog/editUser.schema.js";
 import api from "@/api/axios.js";
+import { handleApiError } from "@/lib/handleApiError.js";
 
 export function useEditUser(user, open) {
     const [loading, setLoading] = useState(false);
@@ -35,11 +36,13 @@ export function useEditUser(user, open) {
                     email:     data.email     ?? "",
                     phone:     data.phone     ?? "",
                 });
-            } catch (error) {}
+            } catch (error) {
+                handleApiError(error);
+            }
         };
 
         fetchUser();
-    }, [user?.id, open]);
+    }, [user?.id, open, form]);
 
     // Intercetta il submit del form e apre il dialog di riepilogo
     const handlePreSubmit = (data) => {

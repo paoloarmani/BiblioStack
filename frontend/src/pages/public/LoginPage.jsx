@@ -1,4 +1,3 @@
-import React from "react";
 import LoginHero from "@/features/auth/login/LoginHero.jsx";
 import LoginPanel from "@/features/auth/login/LoginPanel.jsx";
 

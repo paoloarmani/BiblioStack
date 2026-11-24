@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import api from "@/api/axios.js";
+import api from "@/api/axios.js"
+import { notify } from "@/lib/notify.js";
 
 export function useLanguages() {
     const [languages, setLanguages] = useState([])
@@ -11,7 +12,9 @@ export function useLanguages() {
             try {
                 const { data } = await api.get("/languages", { params: { limit: 100 } })
                 setLanguages(data)
-            } catch {}
+            } catch {
+                notify.error("Impossibile caricare le lingue")
+            }
             finally { setLoading(false) }
         }
         fetch()

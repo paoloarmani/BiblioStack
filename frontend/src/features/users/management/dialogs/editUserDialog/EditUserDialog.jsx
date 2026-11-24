@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { handleApiError } from "@/lib/handleApiError.js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog.jsx";
 import { Button } from "@/components/ui/button.jsx";
@@ -28,7 +27,6 @@ export default function EditUserDialog({ user, open, onClose, onConfirm }) {
         formState: { errors }
     } = form;
 
-    const navigate = useNavigate();
     const onSubmit = handleSubmit(handlePreSubmit);
 
     const handleConfirmFinal = async () => {
@@ -61,7 +59,7 @@ export default function EditUserDialog({ user, open, onClose, onConfirm }) {
                             Modifica {user?.firstName} {user?.lastName}
                         </DialogTitle>
                         <DialogDescription>
-                            Modifica i dati anagrafici dell'utente
+                            Modifica i dati anagrafici dell’utente
                         </DialogDescription>
                     </DialogHeader>
 

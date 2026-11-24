@@ -31,4 +31,12 @@ export default defineConfig([
       'react/prop-types': 'off',
     },
   },
+  {
+    // Componenti generati da shadcn: esportano anche varianti e hook (buttonVariants, useSidebar...)
+    // per convenzione della libreria; si lasciano come li genera la CLI
+    files: ['src/components/ui/**/*.{js,jsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

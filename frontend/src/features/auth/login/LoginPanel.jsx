@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button.jsx";
 import { Separator } from "@/components/ui/separator.jsx";
-import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/useAuth.js";
 import { GoogleLogin } from "@react-oauth/google";
 import { notify } from "@/lib/notify.js";
 import { useLogin } from "@/features/auth/login/useLogin.js";
@@ -10,7 +10,7 @@ import EmailField from "@/features/auth/components/EmailField.jsx";
 import PasswordField from "@/features/auth/components/PasswordField.jsx";
 
 
-export default function LoginPanel({}) {
+export default function LoginPanel() {
 
     const {
         email,
@@ -49,7 +49,7 @@ export default function LoginPanel({}) {
                             await loginWithGoogle(credentialResponse.credential);
                             notify.success("Accesso con Google effettuato");
                             navigate("/", { replace: true });
-                        } catch (error) {
+                        } catch {
                             // Gli errori dell'API vengono già gestiti dall'interceptor o da handleApiError
                             notify.error("Errore durante l'accesso con Google nel server");
                         }

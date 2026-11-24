@@ -20,7 +20,7 @@ import {
     SidebarMenuItem
 } from "@/components/ui/sidebar.jsx";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.jsx";
-import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/useAuth.js";
 import UserMenu from "@/components/common/userMenu/UserMenu.jsx";
 
 const navItems = [

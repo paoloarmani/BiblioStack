@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { changeRoleSchema } from "./changeRole.schema.js";
 
@@ -14,9 +14,9 @@ export function useChangeRole(user) {
         }
     });
 
-    const { handleSubmit, watch, setValue, reset } = form;
+    const { handleSubmit, setValue, reset } = form;
 
-    const role = watch("role");
+    const role = useWatch({ control: form.control, name: "role" });
 
     // Intercetta il submit e apre la conferma
     const handlePreSubmit = (data) => {

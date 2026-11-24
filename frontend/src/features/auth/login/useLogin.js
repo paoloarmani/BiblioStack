@@ -5,7 +5,7 @@ import { z } from "zod";
 import { notify } from "@/lib/notify.js";
 import { handleApiError } from "@/lib/handleApiError.js";
 
-import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/useAuth.js";
 
 // Creo lo schema che definisce il tipo e i dati che posso ricevere dal form
 const loginSchema = z.object({

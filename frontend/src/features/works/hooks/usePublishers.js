@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import api from "@/api/axios.js";
+import api from "@/api/axios.js"
+import { notify } from "@/lib/notify.js";
 
 export function usePublishers() {
     const [publishers, setPublishers] = useState([])
@@ -11,7 +12,9 @@ export function usePublishers() {
             try {
                 const { data } = await api.get("/publishers", { params: { limit: 100 } })
                 setPublishers(data)
-            } catch {}
+            } catch {
+                notify.error("Impossibile caricare gli editori")
+            }
             finally { setLoading(false) }
         }
         fetch()

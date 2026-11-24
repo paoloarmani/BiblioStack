@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { User, LogOut, QrCode } from "lucide-react";
-import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/useAuth.js";
 import {
     DropdownMenu,
     DropdownMenuContent, DropdownMenuItem,

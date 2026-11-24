@@ -8,7 +8,7 @@ import { SummaryRow } from "@/components/common/SummaryRow.jsx";
 import { AlertTriangle, FileText } from "lucide-react";
 import { addDays } from "date-fns";
 import { useSuspendUser } from "@/features/users/management/dialogs/suspendUserDialog/useSuspendUser.js";
-import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/useAuth.js";
 import ConfirmDialog from "@/components/common/dialogs/ConfirmDialog.jsx";
 import DateSelector from "@/components/common/DateSelector.jsx";
 import { Controller } from "react-hook-form";
@@ -32,7 +32,6 @@ export default function SuspendUserDialog({ user, open, onClose, onConfirm }) {
         register,
         handleSubmit,
         control,
-        setValue,
         formState: { errors }
     } = form;
 
@@ -78,7 +77,7 @@ export default function SuspendUserDialog({ user, open, onClose, onConfirm }) {
                             Sospendi {user?.firstName} {user?.lastName}
                         </DialogTitle>
                         <DialogDescription>
-                            L'utente non potrà accedere fino alla riattivazione
+                            L’utente non potrà accedere fino alla riattivazione
                         </DialogDescription>
                     </DialogHeader>
 

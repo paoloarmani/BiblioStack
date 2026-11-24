@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/useAuth.js";
 import { addLoanSchema } from "@/features/loans/management/schemas/loan.schema.js";
 import { handleApiError } from "@/lib/handleApiError.js";
 import { notify } from "@/lib/notify.js";
@@ -70,7 +70,7 @@ export function useAddLoan(onSuccess) {
             try {
                 const { data } = await api.get(`/users/${userIdValue}`);
                 setPatronInfo({ valid: true, user: data });
-            } catch (error) {
+            } catch {
                 setPatronInfo({ valid: false });
             } finally {
                 setPatronLoading(false);
@@ -96,7 +96,7 @@ export function useAddLoan(onSuccess) {
             try {
                 const { data } = await api.get(`/items/${itemIdValue}`);
                 setItemInfo({ valid: true, item: data });
-            } catch (error) {
+            } catch {
                 setItemInfo({ valid: false });
             } finally {
                 setItemLoading(false);

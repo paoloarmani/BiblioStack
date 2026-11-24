@@ -69,7 +69,7 @@ export default function CreateUserDialog({ open, onClose, onConfirm }) {
                             Crea nuovo utente
                         </DialogTitle>
                         <DialogDescription className="text-sm text-muted-foreground">
-                            Inserisci le informazioni del nuovo utente della biblioteca. L'utente riceverà un'email per impostare la propria password.
+                            Inserisci le informazioni del nuovo utente della biblioteca. L’utente riceverà un’email per impostare la propria password.
                         </DialogDescription>
                     </DialogHeader>
 

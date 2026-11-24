@@ -31,7 +31,7 @@ export default function EditLoanDialog({ loan, open, onClose, onConfirm }) {
         onConfirm?.();
         onClose();
     });
-    const { register, handleSubmit, control, formState: { errors } } = form;
+    const { handleSubmit, control, formState: { errors } } = form;
 
     if (!loan) return null;
 

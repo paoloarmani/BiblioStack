@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Search, X } from "lucide-react"
+import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input.jsx"
 import { useNavigate } from "react-router-dom"
 
@@ -55,10 +55,4 @@ export function MobileSearchBar({ open }) {
             />
         </div>
     )
-}
-
-export function useMobileSearch() {
-    const [open, setOpen] = useState(false)
-    const toggle = () => setOpen(prev => !prev)
-    return { open, toggle }
 }

@@ -11,6 +11,7 @@ export default function NoticesTable({ notices }) {
         { id: "issuedAt", desc: true },
     ]);
 
+    // eslint-disable-next-line react-hooks/incompatible-library -- useReactTable restituisce funzioni non memoizzabili da React Compiler: il componente resta semplicemente non ottimizzato
     const table = useReactTable({
         data: notices,
         columns: noticesColumns,

@@ -39,7 +39,7 @@ export function useEditItem(item, open, onSuccess) {
             price: item.price ?? null,
             status: item.status
         });
-    }, [item, open]);
+    }, [item, open, form]);
 
     const submit = async () => {
         const values = form.getValues();

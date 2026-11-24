@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input.jsx";
 import { notify } from "@/lib/notify.js";
 import { quickCheckInSchema } from "@/features/loans/management/schemas/loan.schema.js";
@@ -18,12 +18,12 @@ export default function CheckInDialog({ open, onClose, loan = null, onSuccess, o
 
     const isQuickMode = !loan;
 
-    // Pulisce lo stato quando si chiude il dialog
-    useEffect(() => {
-        if (!open) {
-            setItemId("");
-        }
-    }, [open]);
+    // Pulisce lo stato quando si chiude il dialog (aggiornato durante il render, senza effetto)
+    const [prevOpen, setPrevOpen] = useState(open);
+    if (open !== prevOpen) {
+        setPrevOpen(open);
+        if (!open) setItemId("");
+    }
 
     const finishWithoutNotice = () => {
         setAskNoticeOpen(false);

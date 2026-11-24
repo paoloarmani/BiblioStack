@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { User, Plus, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button.jsx"
 import { Badge } from "@/components/ui/badge.jsx"
@@ -57,7 +57,7 @@ function CreateNewButton({ inputName, selected, onSelect }) {
             </div>
 
             <span className="text-sm font-medium">
-                Crea nuovo autore "{inputName}"
+                Crea nuovo autore “{inputName}”
             </span>
         </button>
     )
@@ -112,6 +112,20 @@ function ConflictCard({ conflict, resolution, onResolve }) {
     )
 }
 
+// Risoluzioni iniziali: per ogni conflitto con un autore suggerito, preseleziono il suggerimento
+const initialResolutions = (conflicts) => {
+    const initial = new Map()
+    for (const c of conflicts ?? []) {
+        if (c.suggestedMatch !== null) {
+            initial.set(c.inputName, {
+                inputName: c.inputName,
+                authorId: c.suggestedMatch
+            })
+        }
+    }
+    return initial
+}
+
 export default function AuthorConflictDialog({
                                                  open,
                                                  conflicts,
@@ -119,23 +133,15 @@ export default function AuthorConflictDialog({
                                                  onBack,
                                                  loading
                                              }) {
-    const [resolutions, setResolutions] = useState(new Map())
+    const [resolutions, setResolutions] = useState(() => initialResolutions(conflicts))
 
     // Ricalcola le risoluzioni ogni volta che il dialog si apre con nuovi conflitti
-    useEffect(() => {
-        if (!open) return
-
-        const initial = new Map()
-        conflicts.forEach(c => {
-            if (c.suggestedMatch !== null) {
-                initial.set(c.inputName, {
-                    inputName: c.inputName,
-                    authorId: c.suggestedMatch
-                })
-            }
-        })
-        setResolutions(initial)
-    }, [open, conflicts])
+    // (aggiornamento durante il render invece di un effetto: evita un render in più)
+    const [prev, setPrev] = useState({ open, conflicts })
+    if (prev.open !== open || prev.conflicts !== conflicts) {
+        setPrev({ open, conflicts })
+        if (open) setResolutions(initialResolutions(conflicts))
+    }
 
     const handleResolve = (inputName, authorId) => {
         setResolutions(prev =>

@@ -6,6 +6,7 @@ import { getStaffItemsColumns } from "@/features/items/management/components/Sta
 export default function StaffItemsTable({ items, work, isAdmin = false, onEdit, onDelete }) {
     const columns = getStaffItemsColumns({ isAdmin, work, onEdit, onDelete });
 
+    // eslint-disable-next-line react-hooks/incompatible-library -- useReactTable restituisce funzioni non memoizzabili da React Compiler: il componente resta semplicemente non ottimizzato
     const table = useReactTable({
         data: items,
         columns,

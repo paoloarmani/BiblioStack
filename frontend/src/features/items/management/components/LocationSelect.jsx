@@ -58,7 +58,6 @@ export default function LocationSelect({ locations, value, onValueChange, placeh
                     <CommandList>
                         <CommandEmpty>Nessuna posizione trovata.</CommandEmpty>
                         {Object.entries(grouped).map(([school, locs], index, arr) => {
-                            const labelGroup = Object.entries(grouped);
                             return (
                                 <div key={school}>
                                     <CommandGroup heading={school}>

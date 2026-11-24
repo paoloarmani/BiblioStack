@@ -23,7 +23,7 @@ export function useWorks(endPoint) {
         }
 
         fetchWorks()
-    }, [])
+    }, [endPoint, navigate])
 
     return { works, loading, error }
 }

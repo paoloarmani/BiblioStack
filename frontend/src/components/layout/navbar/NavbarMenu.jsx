@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext.jsx";
+import { useAuth } from "@/context/useAuth.js";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button.jsx";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.jsx";
