@@ -47,7 +47,7 @@ export function useAdminWorks() {
 
     const deleteWork = async (workId) => {
         try {
-            await api.delete(`/works/${workId}`)
+            await api.delete(`/works/${encodeURIComponent(workId)}`)
             setWorks(prev => prev.filter(w => w.id !== workId))
             notify.success("Opera eliminata")
         } catch {
@@ -57,7 +57,7 @@ export function useAdminWorks() {
 
     const updateWork = async (workId, payload) => {
         try {
-            await api.patch(`/works/${workId}`, payload)
+            await api.patch(`/works/${encodeURIComponent(workId)}`, payload)
             // Ricarico la pagina: la risposta del PATCH non contiene il riepilogo delle copie
             await fetchWorks()
 

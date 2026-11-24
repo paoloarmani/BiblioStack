@@ -64,6 +64,10 @@ export function handleApiError(error, navigate) {
             notify.error("Non puoi eliminare l'opera perché è associata a uno o più prestiti");
             break;
 
+        case "BAD_REQUEST":
+            notify.error("Richiesta non valida");
+            break;
+
         default:
             notify.error(data.message || "Errore server");
     }

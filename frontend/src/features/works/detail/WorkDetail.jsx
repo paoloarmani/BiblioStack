@@ -49,7 +49,7 @@ export default function WorkDetail({ work, loading, error, refetch }) {
 
     const handleDeleteItem = async (itemId) => {
         try {
-            await api.delete(`/items/${itemId}`);
+            await api.delete(`/items/${encodeURIComponent(itemId)}`);
             notify.success("Copia eliminata");
             refetch();
         } catch (err) {

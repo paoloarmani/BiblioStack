@@ -94,7 +94,7 @@ export function useAddLoan(onSuccess) {
         const fetchItem = async () => {
             setItemLoading(true);
             try {
-                const { data } = await api.get(`/items/${itemIdValue}`);
+                const { data } = await api.get(`/items/${encodeURIComponent(itemIdValue)}`);
                 setItemInfo({ valid: true, item: data });
             } catch {
                 setItemInfo({ valid: false });

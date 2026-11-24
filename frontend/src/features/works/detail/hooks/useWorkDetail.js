@@ -18,7 +18,7 @@ export function useWorkDetail(id) {
 
         try {
             // HTTP request
-            const res = await api.get(`/works/${id}`, { signal })
+            const res = await api.get(`/works/${encodeURIComponent(id)}`, { signal })
 
             // Salva risultato
             setWork(res.data)

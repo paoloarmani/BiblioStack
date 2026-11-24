@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CODE_PATTERN } from "./params.schema.js";
 
 // Schema di validazione per la creazione di un'opera CRUD (senza autore collegato)
 export const CreateWorkSchema = z.object({
@@ -34,7 +35,7 @@ export const WorkSearchSchema = z.object({
 export const CreateWorkFromExternalSchema = z.object({
 
     // Dati identificativi
-    isbn: z.string().min(1, "ISBN is required"),
+    isbn: z.string().trim().regex(CODE_PATTERN, "Invalid ISBN"), // diventa l'id dell'opera, usato negli URL
 
     // Dati testuali — tutti opzionali perché le API esterne potrebbero non averli
     title:           z.string().trim().min(1, "Title is required"),

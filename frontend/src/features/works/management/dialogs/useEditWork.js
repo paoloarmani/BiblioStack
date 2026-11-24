@@ -54,7 +54,7 @@ export function useEditWork(work, open) {
 
         const fetchWork = async () => {
             try {
-                const { data } = await api.get(`/works/${work.id}`);
+                const { data } = await api.get(`/works/${encodeURIComponent(work.id)}`);
                 form.reset(mapWorkToForm(data));
             } catch (error) {
                 handleApiError(error, navigate)

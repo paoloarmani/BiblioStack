@@ -48,7 +48,7 @@ export default function CheckInDialog({ open, onClose, loan = null, onSuccess, o
             }
             const trimmedId = result.data.itemId;
 
-            const { data: itemData } = await api.get(`/items/${trimmedId}`);
+            const { data: itemData } = await api.get(`/items/${encodeURIComponent(trimmedId)}`);
 
             if (!itemData) {
                 notify.error("La copia specificata non esiste nel sistema.");

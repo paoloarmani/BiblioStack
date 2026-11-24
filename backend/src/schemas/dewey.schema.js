@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { DEWEY_PATTERN } from "./params.schema.js";
 
 // Schema di validazione dei dati per la creazione di un tipo di un codice Dewey
 export const CreateDeweySchema = z.object({
-    code: z.string().min(1).max(16),
+    code: z.string().trim().regex(DEWEY_PATTERN),
     description: z.string().max(255).optional()
 });
 

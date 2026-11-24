@@ -3,6 +3,11 @@ import { workController } from "../controllers/work.controller.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import {tryAuthenticate, verifyUser} from "../middleware/auth.middleware.js";
 import { permit } from "../middleware/role.middleware.js";
+import { validateParams } from "../middleware/validateParams.middleware.js";
+
+// Formato dei parametri dell'URL (vedi schemas/params.schema.js)
+const validateIsbn = validateParams({ isbn: "isbn" });
+const validateId = validateParams({ id: "code" });
 
 const router = express.Router();
 
@@ -19,10 +24,10 @@ router.get('/mostLoaned', workController.getMostLoaned);
 router.get('/', paginationMiddleware, workController.getAll);
 
 // GET /works/:isbn
-router.get("/lookup/:isbn", verifyUser, permit("admin"), workController.lookup);
+router.get("/lookup/:isbn", verifyUser, permit("admin"), validateIsbn, workController.lookup);
 
 // GET /works/:id
-router.get('/:id', tryAuthenticate, workController.getById);
+router.get('/:id', tryAuthenticate, validateId, workController.getById);
 
 
 // POST /works/from-external/:isbn
@@ -33,10 +38,10 @@ router.post('/',verifyUser, permit( "admin"), workController.create);
 
 
 // PATCH /works/:id
-router.patch('/:id',verifyUser, permit( "admin"), workController.update);
+router.patch('/:id',verifyUser, permit( "admin"), validateId, workController.update);
 
 
 // DELETE /works/:id
-router.delete('/:id',verifyUser, permit( "admin"), workController.delete);
+router.delete('/:id',verifyUser, permit( "admin"), validateId, workController.delete);
 
 export default router;

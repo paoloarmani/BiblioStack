@@ -3,6 +3,10 @@ import { reservationController } from "../controllers/reservation.controller.js"
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import { verifyUser } from "../middleware/auth.middleware.js";
 import { permit } from "../middleware/role.middleware.js";
+import { validateParams } from "../middleware/validateParams.middleware.js";
+
+// Formato dei parametri dell'URL (vedi schemas/params.schema.js)
+const validateId = validateParams({ id: "int" });
 
 const router = express.Router();
 
@@ -16,7 +20,7 @@ router.get("/mine", paginationMiddleware, verifyUser, reservationController.getM
 router.get("/", verifyUser, permit("librarian", "admin"), paginationMiddleware, reservationController.getAll);
 
 // GET /reservations/:id
-router.get("/:id", verifyUser, reservationController.getById);
+router.get("/:id", verifyUser, validateId, reservationController.getById);
 
 
 // POST /reservations
@@ -24,10 +28,10 @@ router.post("/", verifyUser, reservationController.create);
 
 
 // PATCH /reservations/:id  (body: status: "...")
-router.patch("/:id", verifyUser, reservationController.update);
+router.patch("/:id", verifyUser, validateId, reservationController.update);
 
 
 // DELETE /reservations/:id
-router.delete("/:id", verifyUser, permit("admin"), reservationController.delete);
+router.delete("/:id", verifyUser, permit("admin"), validateId, reservationController.delete);
 
 export default router;

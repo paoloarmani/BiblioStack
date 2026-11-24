@@ -46,7 +46,7 @@ export function useEditItem(item, open, onSuccess) {
         setLoading(true);
         try {
             const { notLoanable, ...rest } = values;
-            await api.patch(`/items/${item.id}`, {
+            await api.patch(`/items/${encodeURIComponent(item.id)}`, {
                 ...rest,
                 loanable: !notLoanable,
                 shelfMark: values.shelfMark?.trim() || null,

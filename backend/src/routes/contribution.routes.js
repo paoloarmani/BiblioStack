@@ -3,6 +3,10 @@ import {paginationMiddleware} from "../middleware/pagination.middleware.js";
 import {contributionController} from "../controllers/contribution.controller.js";
 import {verifyUser} from "../middleware/auth.middleware.js";
 import {permit} from "../middleware/role.middleware.js";
+import { validateParams } from "../middleware/validateParams.middleware.js";
+
+// Formato dei parametri dell'URL (vedi schemas/params.schema.js)
+const validateId = validateParams({ id: "smallint" });
 
 const router = express.Router();
 
@@ -10,7 +14,7 @@ const router = express.Router();
 router.get("/", paginationMiddleware, contributionController.getAll);
 
 // GET /contributions/:id
-router.get("/:id", contributionController.getById);
+router.get("/:id", validateId, contributionController.getById);
 
 
 // POST /contributions
@@ -18,10 +22,10 @@ router.post("/", verifyUser, permit("admin"), contributionController.create);
 
 
 // PATCH /contributions/:id
-router.patch("/:id", verifyUser, permit("admin"), contributionController.update);
+router.patch("/:id", verifyUser, permit("admin"), validateId, contributionController.update);
 
 
 // DELETE /contributions/:id
-router.delete("/:id", verifyUser, permit("admin"), contributionController.delete);
+router.delete("/:id", verifyUser, permit("admin"), validateId, contributionController.delete);
 
 export default router;

@@ -3,6 +3,10 @@ import { loanController } from "../controllers/loan.controller.js";
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import { verifyUser } from "../middleware/auth.middleware.js";
 import { permit } from "../middleware/role.middleware.js";
+import { validateParams } from "../middleware/validateParams.middleware.js";
+
+// Formato dei parametri dell'URL (vedi schemas/params.schema.js)
+const validateId = validateParams({ id: "int" });
 
 const router = express.Router()
 
@@ -16,21 +20,21 @@ router.get("/mine", paginationMiddleware, verifyUser, loanController.getMine);
 router.get("/", paginationMiddleware, verifyUser, permit("librarian", "admin"), loanController.getAll);
 
 // GET /loans/:id
-router.get("/:id", verifyUser, loanController.getById);
+router.get("/:id", verifyUser, validateId, loanController.getById);
 
 
 // POST /loans
 router.post("/", verifyUser, permit("librarian", "admin"), loanController.checkOut);
 
 // POST /loans/:id/checkIn
-router.patch("/:id/checkIn", verifyUser, permit("librarian", "admin"), loanController.checkIn);
+router.patch("/:id/checkIn", verifyUser, permit("librarian", "admin"), validateId, loanController.checkIn);
 
 
 // PATCH /loans/:id
-router.patch("/:id", verifyUser, permit("librarian", "admin") , loanController.update);
+router.patch("/:id", verifyUser, permit("librarian", "admin") , validateId, loanController.update);
 
 
 // DELETE /loans/:id
-router.delete("/:id", verifyUser, permit("admin"), loanController.delete);
+router.delete("/:id", verifyUser, permit("admin"), validateId, loanController.delete);
 
 export default router

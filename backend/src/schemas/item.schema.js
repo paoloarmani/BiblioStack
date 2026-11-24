@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CODE_PATTERN } from "./params.schema.js";
 
 // Collocazione completa della copia (es. "A1 I 3"): univoca, stringa vuota trattata come assente
 const ShelfMarkSchema = z.preprocess(
@@ -8,7 +9,7 @@ const ShelfMarkSchema = z.preprocess(
 
 // Schema di validazione dei dati per la creazione di una copia
 export const CreateItemSchema = z.object({
-    id:              z.string().trim().min(1, "Item id is required"),
+    id:              z.string().trim().regex(CODE_PATTERN, "Invalid item id"),
     workId:          z.string().min(1, "workId is required"),
     locationId:      z.number().int().positive().optional().nullable(),
     shelfMark:       ShelfMarkSchema,

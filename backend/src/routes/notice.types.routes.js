@@ -1,6 +1,10 @@
 import express from 'express';
 import { paginationMiddleware } from "../middleware/pagination.middleware.js";
 import { noticeTypesController } from "../controllers/notice.types.controller.js";
+import { validateParams } from "../middleware/validateParams.middleware.js";
+
+// Formato dei parametri dell'URL (vedi schemas/params.schema.js)
+const validateId = validateParams({ id: "smallint" });
 
 const router = express.Router();
 
@@ -8,6 +12,6 @@ const router = express.Router();
 router.get("/", paginationMiddleware, noticeTypesController.getAll);
 
 // GET /notice-types/:id
-router.get("/:id", noticeTypesController.getById);
+router.get("/:id", validateId, noticeTypesController.getById);
 
 export default router;
