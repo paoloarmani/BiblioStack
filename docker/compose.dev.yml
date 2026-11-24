@@ -15,6 +15,8 @@ x-db-env: &db-env
   POSTGRES_USER: ${POSTGRES_USER:-bibliostack}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bibliostack_dev}
   POSTGRES_DB: ${POSTGRES_DB:-bibliostack}
+  APP_DB_USER: ${APP_DB_USER:-bibliostack_app}
+  APP_DB_PASSWORD: ${APP_DB_PASSWORD:-bibliostack_app_dev}
 
 services:
   # ---------- DATABASE ----------
@@ -64,7 +66,8 @@ services:
       NODE_ENV: development
       PORT: 5001
       FRONTEND_URL: http://localhost:${FRONTEND_HOST_PORT:-5173}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-bibliostack}:${POSTGRES_PASSWORD:-bibliostack_dev}@db:5432/${POSTGRES_DB:-bibliostack}
+      # Stesso ruolo a permessi minimi della produzione: un errore di permessi emerge già in sviluppo
+      DATABASE_URL: postgresql://${APP_DB_USER:-bibliostack_app}:${APP_DB_PASSWORD:-bibliostack_app_dev}@db:5432/${POSTGRES_DB:-bibliostack}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_dev}

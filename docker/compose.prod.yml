@@ -12,6 +12,9 @@ x-db-env: &db-env
   POSTGRES_USER: ${POSTGRES_USER:?Impostare POSTGRES_USER in docker/.env.prod}
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Impostare POSTGRES_PASSWORD in docker/.env.prod}
   POSTGRES_DB: ${POSTGRES_DB:-bibliostack}
+  # Ruolo con permessi minimi usato dal backend (creato da postgres/init/005_app_role.sh)
+  APP_DB_USER: ${APP_DB_USER:-bibliostack_app}
+  APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Impostare APP_DB_PASSWORD in docker/.env.prod}
 
 services:
   # ---------- DATABASE ----------
@@ -63,7 +66,8 @@ services:
       PORT: 5001
       # Indirizzo pubblico dell'app: usato per CORS e per i link nelle email (più indirizzi separati da virgola)
       FRONTEND_URL: ${PUBLIC_URL:?Impostare PUBLIC_URL in docker/.env.prod (es. https://biblioteca.scuola.it)}
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-bibliostack}
+      # Il backend NON usa il proprietario del database: solo SELECT/INSERT/UPDATE/DELETE
+      DATABASE_URL: postgresql://${APP_DB_USER:-bibliostack_app}:${APP_DB_PASSWORD}@db:5432/${POSTGRES_DB:-bibliostack}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}

@@ -79,6 +79,8 @@ restore_db() {
     fi
     # Le sessioni attive (refresh token in Redis) potrebbero riferirsi a dati non più presenti
     "$run" exec -T redis redis-cli FLUSHDB >/dev/null 2>&1 || true
+    # Il dump ricrea lo schema: ripristino i permessi del ruolo applicativo
+    ensure_app_role "$run"
     "$run" start backend
 }
 
@@ -88,6 +90,21 @@ run_sql_file() {
     [[ -f "$file" ]] || { echo "❌ File non trovato: $file" >&2; exit 1; }
     "$run" exec -T db sh -c 'psql -q -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < "$file"
     echo "✅ Importato: $file"
+}
+
+# Crea o riallinea il ruolo a permessi minimi usato dal backend (docker/postgres/init/005_app_role.sh).
+# Idempotente: serve per i database creati prima del ruolo e dopo un ripristino (il dump ricrea lo schema).
+ensure_app_role() {
+    local run="$1"
+    "$run" exec -T db sh /docker-entrypoint-initdb.d/005_app_role.sh
+}
+
+# Avvia prima il database (attendendo l'healthcheck) e prepara il ruolo applicativo, poi il resto
+start_stack() {
+    local run="$1"; shift
+    "$run" up -d --build --wait db
+    ensure_app_role "$run"
+    "$run" up -d --build "$@"
 }
 
 # Legge una variabile da docker/.env.dev con fallback al default
@@ -117,6 +134,7 @@ Dati
   import-catalogo <file.sql>
                   Importa un catalogo (es. quello storico) su un database SENZA seed
   sql <file.sql>  Esegue un file SQL (es. una migrazione in docker/postgres/migrations)
+  db-ruolo        Crea/riallinea il ruolo a permessi minimi del backend (fatto già da "up")
   backup [file]   Dump compresso del database (default: backups/bibliostack-DATA_ORA.sql.gz)
   restore <file> [--si]
                   SOSTITUISCE i dati con quelli di un backup (chiede conferma, o --si)
@@ -137,6 +155,7 @@ Produzione (docker/compose.prod.yml, configurazione in docker/.env.prod)
   prod admin <email>            Crea un amministratore
   prod import-catalogo <file>   Importa un catalogo sul database di produzione
   prod sql <file>               Esegue un file SQL (migrazioni)
+  prod db-ruolo                 Crea/riallinea il ruolo a permessi minimi del backend
   prod backup [file]            Dump compresso del database (default: backups/bibliostack-DATA_ORA.sql.gz)
   prod restore <file> [--si]    Ripristina un backup (sostituisce i dati)
   prod psql       Shell SQL sul database di produzione
@@ -165,7 +184,7 @@ shift || true
 case "$cmd" in
     up)
         # -V ricrea i volumi anonimi di node_modules, così riflettono sempre le dipendenze dell'immagine
-        compose up -d --build -V "$@"
+        start_stack compose -V "$@"
         wait_backend
         echo
         echo "Frontend: http://localhost:$(env_or_default FRONTEND_HOST_PORT 5173)"
@@ -183,7 +202,7 @@ case "$cmd" in
         read -r -p "⚠️  Il database e Redis verranno cancellati. Continuare? [s/N] " answer
         [[ "$answer" =~ ^[sSyY]$ ]] || { echo "Annullato."; exit 0; }
         compose down -v
-        compose up -d --build -V
+        start_stack compose -V
         wait_backend
         # --senza-seed: database vuoto, pronto per import-catalogo
         [[ "${1:-}" == "--senza-seed" ]] || compose exec -T backend node src/db/seed.js
@@ -209,11 +228,12 @@ case "$cmd" in
     import-catalogo|sql) run_sql_file compose "${1:-}" ;;
     backup)   backup_db compose "${1:-}" ;;
     restore)  restore_db compose "${1:-}" "${2:-}" ;;
+    db-ruolo) ensure_app_role compose ;;
     prod)
         sub="${1:-help}"; shift || true
         case "$sub" in
             up)
-                compose_prod up -d --build
+                start_stack compose_prod
                 echo "✅ Avviato. Indirizzo: $(grep -E '^PUBLIC_URL=' "$PROD_ENV_FILE" | cut -d= -f2-)"
                 echo "Primo avvio? './bibliostack.sh prod admin <email>' per creare l'amministratore."
                 ;;
@@ -224,8 +244,9 @@ case "$cmd" in
             import-catalogo|sql) run_sql_file compose_prod "${1:-}" ;;
             backup)  backup_db compose_prod "${1:-}" ;;
             restore) restore_db compose_prod "${1:-}" "${2:-}" ;;
+            db-ruolo) ensure_app_role compose_prod ;;
             psql)   compose_prod exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"' ;;
-            *)      echo "Uso: ./bibliostack.sh prod up|down|ps|logs|admin|import-catalogo|sql|backup|restore|psql" >&2; exit 1 ;;
+            *)      echo "Uso: ./bibliostack.sh prod up|down|ps|logs|admin|import-catalogo|sql|backup|restore|db-ruolo|psql" >&2; exit 1 ;;
         esac
         ;;
     help|-h|--help) usage ;;
