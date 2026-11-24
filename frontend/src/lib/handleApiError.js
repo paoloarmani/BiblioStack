@@ -64,6 +64,10 @@ export function handleApiError(error, navigate) {
             notify.error("Non puoi eliminare l'opera perché è associata a uno o più prestiti");
             break;
 
+        case "EMAIL_QUOTA_EXCEEDED":
+            notify.error("Limite di email raggiunto per oggi: l'email non è stata inviata, riprova più tardi");
+            break;
+
         case "BAD_REQUEST":
             notify.error("Richiesta non valida");
             break;
