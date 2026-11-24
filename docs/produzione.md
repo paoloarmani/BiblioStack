@@ -79,6 +79,7 @@ Il seed demo **non** va caricato in produzione. Lo schema del database lo creano
 | `EMAIL_FROM` | no | Mittente delle email, per esempio `Biblioteca ITT Pozzo <biblioteca@scuola.it>`. Con SMTP di norma deve coincidere con `SMTP_USER` o un suo alias. |
 | `RESEND_API_KEY` | no | Alternativa a SMTP. Serve un dominio verificato su Resend in `EMAIL_FROM`. |
 | `EMAIL_DAILY_LIMIT`, `EMAIL_MONTHLY_LIMIT` | no | Tetto globale sugli invii (default 500/giorno con SMTP; 90/giorno e 2900/mese con Resend). `0` = nessun limite. |
+| `API_RATE_LIMIT_USER`, `API_RATE_LIMIT_ANON` | no (300, 600) | Limite generale di richieste al minuto: per utente autenticato e per IP degli anonimi (più alto perché a scuola molti condividono lo stesso IP pubblico). `0` = disattivato. |
 | `LIBRARY_NAME`, `LIBRARY_INSTITUTION`, `LIBRARY_ADDRESS`, `LIBRARY_EMAIL`, `LIBRARY_PHONE`, `LIBRARY_HOURS` | no | Dati mostrati nel footer del sito. `LIBRARY_HOURS` accetta più righe separate da `\|`. |
 | `LIBRARY_PRIVACY_URL`, `LIBRARY_RULES_URL`, `LIBRARY_WEBSITE_URL` | no | Link del footer: informativa privacy dell'ente (da impostare: è un obbligo di legge), regolamento dei prestiti, sito della scuola. Solo `http(s)`. |
 | `GOOGLE_BOOKS_API_KEY` | no | Ricerca dei dati di un libro tramite ISBN quando si aggiunge un'opera. |
@@ -236,6 +237,8 @@ in `docker/postgres/migrations/`.
   riallinea a ogni avvio; a mano: `./bibliostack.sh prod db-ruolo`.
 - Tenere `docker/.env.prod` con permessi `600` e conservarne una copia sicura insieme ai backup.
   Il file è escluso da git.
+- Limite generale sulle API (vedi `API_RATE_LIMIT_*`), oltre ai limiti specifici su login, reset
+  password e invio di email. Oltre il limite il backend risponde 429 con `Retry-After`.
 - Esporre solo `web`: database, Redis e backend non hanno porte pubblicate.
 - Aggiornare periodicamente il sistema operativo e Docker, poi `./bibliostack.sh prod up` per
   ricostruire le immagini.
@@ -251,4 +254,5 @@ in `docker/postgres/migrations/`.
 | `prod up` fallisce con "port is already allocated" | La porta 80/443 è già usata da un altro servizio: scenario D. |
 | Login bloccato per tutti insieme ("troppi tentativi") | Proxy davanti a Caddy senza `TRUSTED_PROXIES` e `TRUST_PROXY_HOPS=2` (scenario D). |
 | Le email non arrivano | `./bibliostack.sh prod logs backend`: errore SMTP (credenziali, SMTP AUTH disattivato, `EMAIL_FROM` non autorizzato), oppure `Email quota reached`. Senza `SMTP_HOST` né `RESEND_API_KEY` le email non partono. |
+| Errori "Troppe richieste" durante l'uso normale | Molti utenti anonimi dietro lo stesso IP: alzare `API_RATE_LIMIT_ANON`. Dietro un proxy, controllare `TRUSTED_PROXIES` e `TRUST_PROXY_HOPS` (altrimenti tutti risultano col solo IP del proxy). |
 | Il backend non si collega al database dopo l'aggiornamento | Manca `APP_DB_PASSWORD` in `docker/.env.prod`, o il ruolo non è stato creato: `./bibliostack.sh prod db-ruolo`. |

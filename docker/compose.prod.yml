@@ -90,6 +90,9 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_DAILY_LIMIT: ${EMAIL_DAILY_LIMIT:-}
       EMAIL_MONTHLY_LIMIT: ${EMAIL_MONTHLY_LIMIT:-}
+      # Limite generale sulle API (richieste al minuto): per utente autenticato e per IP anonimo
+      API_RATE_LIMIT_USER: ${API_RATE_LIMIT_USER:-}
+      API_RATE_LIMIT_ANON: ${API_RATE_LIMIT_ANON:-}
       # Obbligatorio (il backend non parte senza): domini le cui email possono creare un account con Google
       ALLOWED_GOOGLE_DOMAINS: ${ALLOWED_GOOGLE_DOMAINS:?Impostare ALLOWED_GOOGLE_DOMAINS in docker/.env.prod (es. scuola.edu.it)}
       ALLOW_PUBLIC_REGISTRATION: ${ALLOW_PUBLIC_REGISTRATION:-false}

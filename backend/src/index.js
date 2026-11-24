@@ -33,6 +33,7 @@ import publicationCountriesRoutes from "./routes/publication.countries.routes.js
 import noticeTypesRoutes from "./routes/notice.types.routes.js";
 import operatorDashboardRoutes from "./features/operatorDashboard/operator.dashboard.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import { apiRateLimit } from "./middleware/apiRateLimit.middleware.js";
 import publicConfigRoutes from "./features/publicConfig/publicConfig.routes.js";
 
 const app = express()
@@ -67,6 +68,9 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
     res.send("Server is running");
 });
+
+// Limite generale di richieste per utente/IP, prima di tutte le rotte API
+app.use("/api", apiRateLimit)
 
 app.use("/api/authors", authorRoutes)
 

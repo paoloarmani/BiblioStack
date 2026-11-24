@@ -89,6 +89,9 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       EMAIL_DAILY_LIMIT: ${EMAIL_DAILY_LIMIT:-}
       EMAIL_MONTHLY_LIMIT: ${EMAIL_MONTHLY_LIMIT:-}
+      # Limite generale sulle API (richieste al minuto): per utente autenticato e per IP anonimo
+      API_RATE_LIMIT_USER: ${API_RATE_LIMIT_USER:-}
+      API_RATE_LIMIT_ANON: ${API_RATE_LIMIT_ANON:-}
       ALLOWED_GOOGLE_DOMAINS: ${ALLOWED_GOOGLE_DOMAINS:-example.invalid}
       ALLOW_PUBLIC_REGISTRATION: ${ALLOW_PUBLIC_REGISTRATION:-false}
       # Informazioni mostrate nel footer del sito (tutte facoltative)

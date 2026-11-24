@@ -68,6 +68,10 @@ export function handleApiError(error, navigate) {
             notify.error("Limite di email raggiunto per oggi: l'email non è stata inviata, riprova più tardi");
             break;
 
+        case "RATE_LIMITED":
+            notify.error("Troppe richieste in poco tempo: attendi qualche secondo e riprova");
+            break;
+
         case "BAD_REQUEST":
             notify.error("Richiesta non valida");
             break;
