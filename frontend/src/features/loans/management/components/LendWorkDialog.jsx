@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { BookUp, Loader2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button.jsx";
 import { Label } from "@/components/ui/label.jsx";
+import { Badge } from "@/components/ui/badge.jsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.jsx";
 import {
     Dialog,
     DialogContent,
@@ -110,25 +112,26 @@ export default function LendWorkDialog({ open, onClose, work, initialItemId = nu
                                 Nessuna copia disponibile al prestito: sono tutte in prestito, riservate, smarrite o di sola consultazione.
                             </p>
                         ) : (
-                            <div role="radiogroup" aria-label="Copia da prestare" className="grid gap-2 sm:grid-cols-2">
+                            <RadioGroup value={itemId ?? ""} onValueChange={setItemId} aria-label="Copia da prestare"
+                                        className="grid gap-2 sm:grid-cols-2">
                                 {copies.map(c => (
-                                    <label key={c.id}
-                                           className={`flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 text-sm transition-colors ${
-                                               itemId === c.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}>
-                                        <input type="radio" name="itemId" value={c.id} checked={itemId === c.id}
-                                               onChange={() => setItemId(c.id)} className="mt-1 accent-primary" />
+                                    <Label key={c.id} htmlFor={`copy-${c.id}`}
+                                           className="flex cursor-pointer items-start gap-2 rounded-lg border border-border p-2.5 font-normal transition-colors hover:border-primary/50 has-data-[state=checked]:border-primary has-data-[state=checked]:bg-primary/5">
+                                        <RadioGroupItem value={c.id} id={`copy-${c.id}`} className="mt-0.5" />
                                         <span className="min-w-0">
                                             <span className="block font-mono font-medium">{c.id}</span>
                                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
                                                 <MapPin className="h-3 w-3" />{c.shelfMark ?? c.location?.shelfCode ?? "Non collocata"}
                                             </span>
                                             {c.status === "damaged" && (
-                                                <span className="text-xs text-amber-700 dark:text-amber-400">Copia danneggiata</span>
+                                                <Badge variant="outline" className="mt-1 border-warning text-amber-700 dark:text-amber-400">
+                                                    Copia danneggiata
+                                                </Badge>
                                             )}
                                         </span>
-                                    </label>
+                                    </Label>
                                 ))}
-                            </div>
+                            </RadioGroup>
                         )}
                         {errors.item && <p className="text-xs text-destructive">{errors.item}</p>}
                     </div>

@@ -1,5 +1,6 @@
 import { BookOpen, Clock, PackageCheck } from "lucide-react";
 import { daysUntil } from "@/lib/dateUtils.js";
+import { Card, CardContent } from "@/components/ui/card.jsx";
 
 function Stat({ icon: Icon, label, value, tone = "default" }) {
     const tones = {
@@ -9,18 +10,20 @@ function Stat({ icon: Icon, label, value, tone = "default" }) {
         success: "bg-success/15 text-success",
     };
     return (
-        <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:gap-3 sm:p-4">
-            <div className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg sm:flex ${tones[tone]}`}>
-                <Icon className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-                <p className="flex items-center gap-1.5 text-2xl font-semibold leading-none tabular-nums">
-                    <Icon className={`h-4 w-4 sm:hidden ${tones[tone].split(" ").find(c => c.startsWith("text-"))}`} />
-                    {value}
-                </p>
-                <p className="mt-1 text-xs leading-tight text-muted-foreground">{label}</p>
-            </div>
-        </div>
+        <Card size="sm" className="py-3 sm:py-4">
+            <CardContent className="flex flex-col gap-2 px-3 sm:flex-row sm:items-center sm:gap-3 group-data-[size=sm]/card:px-3 sm:group-data-[size=sm]/card:px-4">
+                <div className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg sm:flex ${tones[tone]}`}>
+                    <Icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 text-2xl font-semibold leading-none tabular-nums">
+                        <Icon className={`h-4 w-4 sm:hidden ${tones[tone].split(" ").find(c => c.startsWith("text-"))}`} />
+                        {value}
+                    </p>
+                    <p className="mt-1 text-xs leading-tight text-muted-foreground">{label}</p>
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 

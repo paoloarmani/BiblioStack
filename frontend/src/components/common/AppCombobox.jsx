@@ -73,7 +73,7 @@ export default function AppCombobox({
                 </Button>
             </PopoverTrigger>
 
-            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                 {/* shouldFilter disattivato in modalità async: il filtro lo fa il server, non cmdk in locale */}
                 <Command shouldFilter={!isAsync}>
                     <CommandInput

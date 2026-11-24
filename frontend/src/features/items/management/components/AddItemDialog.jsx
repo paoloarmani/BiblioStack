@@ -3,6 +3,7 @@ import { Controller } from "react-hook-form";
 import { Loader2, Hash, MapPin, Calendar, Euro, Bookmark, BookLock } from "lucide-react";
 import { Button } from "@/components/ui/button.jsx";
 import { Input } from "@/components/ui/input.jsx";
+import { Checkbox } from "@/components/ui/checkbox.jsx";
 import { Label } from "@/components/ui/label.jsx";
 import { SummaryRow } from "@/components/common/SummaryRow.jsx";
 import { useAddItem } from "@/features/items/management/hooks/useAddItem.js";
@@ -154,17 +155,24 @@ export default function AddItemDialog({ open, onClose, onSuccess, workId, workTi
                             </div>
 
 
-                            <label className="flex items-start gap-2 text-sm cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    className="mt-0.5 h-4 w-4 accent-primary"
-                                    {...register("notLoanable")}
+                            <div className="flex items-start gap-2">
+                                <Controller
+                                    name="notLoanable"
+                                    control={form.control}
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id="add-item-not-loanable"
+                                            checked={!!field.value}
+                                            onCheckedChange={(checked) => field.onChange(checked === true)}
+                                            className="mt-0.5"
+                                        />
+                                    )}
                                 />
-                                <span>
+                                <Label htmlFor="add-item-not-loanable" className="flex-col items-start gap-0.5 font-normal">
                                     Prestito non consentito
-                                    <span className="block text-xs text-muted-foreground">Solo consultazione in sede (dizionari, enciclopedie...)</span>
-                                </span>
-                            </label>
+                                    <span className="text-xs text-muted-foreground">Solo consultazione in sede (dizionari, enciclopedie...)</span>
+                                </Label>
+                            </div>
 
                             <DialogFooter>
                                 <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>

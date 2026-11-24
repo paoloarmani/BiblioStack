@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { BookOpen, Clock, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge.jsx";
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item.jsx";
 import { daysUntil, safeFormat } from "@/lib/dateUtils.js";
 import { formatAuthors } from "@/lib/authorUtils.js";
 import { ProfileSection, EmptyNote } from "@/features/users/profile/components/ProfileSection.jsx";
@@ -36,25 +37,24 @@ function LoanCard({ loan }) {
     const authors = formatAuthors(work?.authors);
 
     return (
-        <Link
-            to={work?.id ? `/works/${encodeURIComponent(work.id)}` : "#"}
-            className="group flex gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-secondary/30 sm:p-4"
-        >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <BookOpen className="h-5 w-5 text-primary" />
-            </div>
-            <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 font-medium leading-snug group-hover:text-primary">
-                    {work?.title ?? "Titolo non disponibile"}
-                </p>
-                {authors && <p className="truncate text-sm text-muted-foreground">{authors}</p>}
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-                    <span>Dal {safeFormat(loan.loanDate)}</span>
-                    {loan.dueDate && <span>Restituire entro il <span className="font-medium text-foreground">{safeFormat(loan.dueDate)}</span></span>}
-                    <DueBadge dueDate={loan.dueDate} />
-                </div>
-            </div>
-        </Link>
+        <Item asChild variant="outline" className="group items-start bg-card hover:border-primary/40 hover:bg-secondary/30">
+            <Link to={work?.id ? `/works/${encodeURIComponent(work.id)}` : "#"}>
+                <ItemMedia variant="icon" className="size-10 rounded-lg bg-primary/10 text-primary">
+                    <BookOpen className="size-5" />
+                </ItemMedia>
+                <ItemContent className="min-w-0">
+                    <ItemTitle className="line-clamp-2 w-auto text-base group-hover:text-primary">
+                        {work?.title ?? "Titolo non disponibile"}
+                    </ItemTitle>
+                    {authors && <ItemDescription className="truncate">{authors}</ItemDescription>}
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                        <span>Dal {safeFormat(loan.loanDate)}</span>
+                        {loan.dueDate && <span>Restituire entro il <span className="font-medium text-foreground">{safeFormat(loan.dueDate)}</span></span>}
+                        <DueBadge dueDate={loan.dueDate} />
+                    </div>
+                </ItemContent>
+            </Link>
+        </Item>
     );
 }
 

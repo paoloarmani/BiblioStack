@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { BookMarked, MapPin, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button.jsx";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/ui/item.jsx";
 import { formatAuthors } from "@/lib/authorUtils.js";
 import { safeFormat } from "@/lib/dateUtils.js";
 import ConfirmDialog from "@/components/common/dialogs/ConfirmDialog.jsx";
@@ -22,21 +23,20 @@ export default function ReservationCard({ reservation, onCancel, loading }) {
 
     return (
         <>
-            <div className={`flex gap-3 rounded-xl border bg-card p-3 sm:p-4 ${ready ? "border-success/40" : "border-border"}`}>
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${ready ? "bg-success/15" : "bg-primary/10"}`}>
-                    <BookMarked className={`h-5 w-5 ${ready ? "text-success" : "text-primary"}`} />
-                </div>
+            <Item variant="outline" className={`items-start bg-card ${ready ? "border-success/40" : ""}`}>
+                <ItemMedia variant="icon" className={`size-10 rounded-lg ${ready ? "bg-success/15 text-success" : "bg-primary/10 text-primary"}`}>
+                    <BookMarked className="size-5" />
+                </ItemMedia>
 
-                <div className="min-w-0 flex-1">
-                    <Link
-                        to={work?.id ? `/works/${encodeURIComponent(work.id)}` : "#"}
-                        className="line-clamp-2 font-medium leading-snug hover:text-primary"
-                    >
-                        {work?.title ?? "Titolo non disponibile"}
-                    </Link>
-                    {authors && <p className="truncate text-sm text-muted-foreground">{authors}</p>}
+                <ItemContent className="min-w-0">
+                    <ItemTitle className="line-clamp-2 w-auto text-base">
+                        <Link to={work?.id ? `/works/${encodeURIComponent(work.id)}` : "#"} className="hover:text-primary">
+                            {work?.title ?? "Titolo non disponibile"}
+                        </Link>
+                    </ItemTitle>
+                    {authors && <ItemDescription className="truncate">{authors}</ItemDescription>}
 
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                         <ReservationStatusBadge status={reservation.status} expiresAt={reservation.expiresAt} />
                         {ready && reservation.expiresAt
                             ? <span>Ritira entro il <span className="font-medium text-foreground">{safeFormat(reservation.expiresAt)}</span></span>
@@ -48,20 +48,22 @@ export default function ReservationCard({ reservation, onCancel, loading }) {
                             </span>
                         )}
                     </div>
-                </div>
+                </ItemContent>
 
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => setCancelOpen(true)}
-                    disabled={loading}
-                    aria-label="Annulla prenotazione"
-                    title="Annulla prenotazione"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-            </div>
+                <ItemActions>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => setCancelOpen(true)}
+                        disabled={loading}
+                        aria-label="Annulla prenotazione"
+                        title="Annulla prenotazione"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </ItemActions>
+            </Item>
 
             <ConfirmDialog
                 open={cancelOpen}

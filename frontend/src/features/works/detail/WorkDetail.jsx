@@ -131,19 +131,18 @@ export default function WorkDetail({ work, loading, error, refetch }) {
                     <h2 className="text-lg font-semibold">Dove trovarlo</h2>
                     <ul className="flex flex-wrap gap-2">
                         {shelvedItems.map(item => (
-                            <li
-                                key={item.id}
-                                className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm"
-                            >
-                                <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="font-mono">{item.shelfMark}</span>
-                                {!item.loanable && (
-                                    <span className="text-xs text-muted-foreground">· solo consultazione</span>
-                                )}
-                                {item.status === "damaged" && (
-                                    <span className="text-xs text-muted-foreground">· copia danneggiata</span>
-                                )}
-                            </li>
+                            <Badge asChild key={item.id} variant="outline" className="h-auto gap-2 rounded-lg px-3 py-1.5 text-sm font-normal">
+                                <li>
+                                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="font-mono">{item.shelfMark}</span>
+                                    {!item.loanable && (
+                                        <span className="text-xs text-muted-foreground">· solo consultazione</span>
+                                    )}
+                                    {item.status === "damaged" && (
+                                        <span className="text-xs text-muted-foreground">· copia danneggiata</span>
+                                    )}
+                                </li>
+                            </Badge>
                         ))}
                     </ul>
                 </section>

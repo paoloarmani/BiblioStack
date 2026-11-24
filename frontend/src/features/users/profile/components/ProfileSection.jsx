@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button.jsx";
+import { Empty, EmptyDescription } from "@/components/ui/empty.jsx";
 
 // Titolo di sezione con link "vedi tutti" e stato vuoto compatto, condivisi dalle sezioni del profilo
 export function ProfileSection({ title, count, linkTo, linkLabel = "Vedi tutti", children }) {
@@ -10,9 +12,9 @@ export function ProfileSection({ title, count, linkTo, linkLabel = "Vedi tutti",
                     {count > 0 && <span className="ml-2 text-sm font-normal text-muted-foreground">({count})</span>}
                 </h2>
                 {linkTo && (
-                    <Link to={linkTo} className="shrink-0 text-sm font-medium text-primary hover:underline">
-                        {linkLabel}
-                    </Link>
+                    <Button asChild variant="link" size="sm" className="h-auto shrink-0 px-0">
+                        <Link to={linkTo}>{linkLabel}</Link>
+                    </Button>
                 )}
             </div>
             {children}
@@ -22,8 +24,8 @@ export function ProfileSection({ title, count, linkTo, linkLabel = "Vedi tutti",
 
 export function EmptyNote({ children }) {
     return (
-        <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-            {children}
-        </div>
+        <Empty className="rounded-xl border border-border px-4 py-6">
+            <EmptyDescription>{children}</EmptyDescription>
+        </Empty>
     );
 }

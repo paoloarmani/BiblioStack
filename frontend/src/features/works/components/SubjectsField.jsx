@@ -1,147 +1,123 @@
-import { useEffect, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { useState } from "react";
+import { Loader2, Plus, X } from "lucide-react";
 import { Label } from "@/components/ui/label.jsx";
-import { Input } from "@/components/ui/input.jsx";
+import { Badge } from "@/components/ui/badge.jsx";
+import { Button } from "@/components/ui/button.jsx";
+import {
+    Command,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command.jsx";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.jsx";
 import api from "@/api/axios.js";
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch.js";
 
-const DEBOUNCE_MS = 250;
+const searchSubjects = async (term) =>
+    (await api.get("/subjects/search", { params: { search: term, limit: 8 } })).data.data;
+
+const normalize = (name) => name.trim().replace(/\s+/g, " ");
 
 // Campo per i soggetti di un'opera: etichette rimovibili + suggerimenti dai soggetti esistenti.
 // value/onChange lavorano con i NOMI: quelli nuovi vengono creati dal backend al salvataggio.
 export default function SubjectsField({ value = [], onChange, error }) {
-    const [text, setText] = useState("");
-    const [suggestions, setSuggestions] = useState([]);
     const [open, setOpen] = useState(false);
-    const [highlight, setHighlight] = useState(-1);
-    const debounceRef = useRef(null);
+    const { term, search, clear, results, loading } = useDebouncedSearch(searchSubjects);
 
-    const has = (name) => value.some(v => v.toLowerCase() === name.trim().toLowerCase());
-
-    useEffect(() => {
-        clearTimeout(debounceRef.current);
-        const term = text.trim();
-        if (!term) return; // i suggerimenti vengono svuotati in onTextChange
-        debounceRef.current = setTimeout(async () => {
-            try {
-                const { data } = await api.get("/subjects/search", { params: { search: term, limit: 8 } });
-                setSuggestions(data.data);
-                setHighlight(-1);
-            } catch {
-                setSuggestions([]);
-            }
-        }, DEBOUNCE_MS);
-        return () => clearTimeout(debounceRef.current);
-    }, [text]);
+    const has = (name) => value.some(v => v.toLowerCase() === normalize(name).toLowerCase());
 
     const add = (name) => {
-        const clean = name.trim().replace(/\s+/g, " ");
+        const clean = normalize(name);
         if (clean && !has(clean)) onChange([...value, clean]);
-        setText("");
-        setSuggestions([]);
-        setHighlight(-1);
+        clear(); // il popover resta aperto: si possono aggiungere più soggetti di seguito
     };
 
     const remove = (name) => onChange(value.filter(v => v !== name));
 
-    const visible = suggestions.filter(s => !has(s.name));
-    const exact = visible.some(s => s.name.toLowerCase() === text.trim().toLowerCase());
-
-    const onKeyDown = (e) => {
-        if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setOpen(true);
-            setHighlight(h => Math.min(h + 1, visible.length - 1));
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setHighlight(h => Math.max(h - 1, -1));
-        } else if (e.key === "Enter") {
-            // Invio non deve inviare il form: aggiunge il suggerimento evidenziato o il testo digitato
-            e.preventDefault();
-            if (highlight >= 0 && visible[highlight]) add(visible[highlight].name);
-            else if (text.trim()) add(text);
-        } else if (e.key === "Backspace" && !text && value.length > 0) {
-            remove(value[value.length - 1]);
-        } else if (e.key === "Escape") {
-            setOpen(false);
-        }
-    };
+    const typed = normalize(term);
+    const visible = results.filter(s => !has(s.name));
+    const canCreate = !!typed && !has(typed) && !visible.some(s => s.name.toLowerCase() === typed.toLowerCase());
 
     return (
         <div className="space-y-1.5">
-            <Label htmlFor="subjects-input">Soggetti</Label>
+            <Label htmlFor="subjects-trigger">Soggetti</Label>
             <p className="text-xs text-muted-foreground">
-                Argomenti trattati (es. Urbanistica, Trentino). Invio per aggiungere; i soggetti nuovi vengono creati.
+                Argomenti trattati (es. Urbanistica, Trentino). I soggetti nuovi vengono creati al salvataggio.
             </p>
 
-            {value.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                    {value.map(name => (
-                        <span
-                            key={name}
-                            className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-sm"
+            <div className="flex flex-wrap items-center gap-2">
+                {value.map(name => (
+                    <Badge key={name} variant="secondary" className="h-7 gap-1 pr-1 text-sm font-normal">
+                        {name}
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 rounded-full"
+                            onClick={() => remove(name)}
+                            aria-label={`Rimuovi ${name}`}
                         >
-                            {name}
-                            <button
-                                type="button"
-                                onClick={() => remove(name)}
-                                className="rounded-full p-0.5 text-muted-foreground hover:text-foreground"
-                                aria-label={`Rimuovi ${name}`}
-                            >
-                                <X className="h-3 w-3" />
-                            </button>
-                        </span>
-                    ))}
-                </div>
-            )}
+                            <X className="h-3 w-3" />
+                        </Button>
+                    </Badge>
+                ))}
 
-            <div className="relative">
-                <Input
-                    id="subjects-input"
-                    value={text}
-                    onChange={(e) => {
-                        setText(e.target.value);
-                        if (!e.target.value.trim()) setSuggestions([]);
-                        setOpen(true);
-                    }}
-                    onKeyDown={onKeyDown}
-                    onFocus={() => setOpen(true)}
-                    onBlur={() => setTimeout(() => setOpen(false), 150)}
-                    placeholder="Cerca o aggiungi un soggetto..."
-                    autoComplete="off"
-                    role="combobox"
-                    aria-expanded={open && (visible.length > 0 || !!text.trim())}
-                    aria-controls="subjects-suggestions"
-                />
-                {open && text.trim() && (
-                    <ul
-                        id="subjects-suggestions"
-                        role="listbox"
-                        className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-popover p-1 text-sm shadow-md"
-                    >
-                        {visible.map((s, i) => (
-                            <li
-                                key={s.id}
-                                role="option"
-                                aria-selected={i === highlight}
-                                onMouseDown={(e) => { e.preventDefault(); add(s.name); }}
-                                className={`cursor-pointer rounded px-2 py-1.5 ${i === highlight ? "bg-primary/10 text-foreground" : "hover:bg-secondary"}`}
-                            >
-                                {s.name}
-                            </li>
-                        ))}
-                        {!exact && !has(text) && (
-                            <li
-                                role="option"
-                                aria-selected={false}
-                                onMouseDown={(e) => { e.preventDefault(); add(text); }}
-                                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-muted-foreground hover:bg-secondary"
-                            >
-                                <Plus className="h-3.5 w-3.5" />
-                                Crea «{text.trim()}»
-                            </li>
-                        )}
-                    </ul>
-                )}
+                <Popover open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) clear(); }}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            id="subjects-trigger"
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            role="combobox"
+                            aria-expanded={open}
+                            aria-invalid={!!error}
+                            className="h-7"
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                            Aggiungi soggetto
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-0" align="start">
+                        {/* shouldFilter disattivato: il filtro lo fa il server */}
+                        <Command shouldFilter={false}>
+                            <CommandInput
+                                placeholder="Cerca o crea un soggetto..."
+                                value={term}
+                                onValueChange={search}
+                            />
+                            <CommandList>
+                                {loading && (
+                                    <div className="flex justify-center py-3">
+                                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                    </div>
+                                )}
+                                {!typed && (
+                                    <p className="py-6 text-center text-sm text-muted-foreground">
+                                        Digita per cercare tra i soggetti esistenti
+                                    </p>
+                                )}
+                                {typed && (visible.length > 0 || canCreate) && (
+                                    <CommandGroup>
+                                        {visible.map(s => (
+                                            <CommandItem key={s.id} value={`s-${s.id}`} onSelect={() => add(s.name)}>
+                                                {s.name}
+                                            </CommandItem>
+                                        ))}
+                                        {canCreate && (
+                                            <CommandItem value="__create__" onSelect={() => add(typed)}
+                                                         className="text-muted-foreground">
+                                                <Plus />
+                                                Crea «{typed}»
+                                            </CommandItem>
+                                        )}
+                                    </CommandGroup>
+                                )}
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
             </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
         </div>

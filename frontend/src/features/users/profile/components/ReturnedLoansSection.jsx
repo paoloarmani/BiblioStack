@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { BookCheck, BookX } from "lucide-react";
 import { Badge } from "@/components/ui/badge.jsx";
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemSeparator, ItemTitle } from "@/components/ui/item.jsx";
+import { Fragment } from "react";
 import { formatAuthors } from "@/lib/authorUtils.js";
 import { formatDateShort } from "@/lib/dateUtils.js";
 import { ProfileSection, EmptyNote } from "@/features/users/profile/components/ProfileSection.jsx";
@@ -11,22 +13,23 @@ function ReturnedLoanRow({ loan }) {
     const authors = formatAuthors(work?.authors);
 
     return (
-        <li className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
-            {late
-                ? <BookX className="h-4 w-4 shrink-0 text-warning" />
-                : <BookCheck className="h-4 w-4 shrink-0 text-success" />}
-            <div className="min-w-0 flex-1">
-                <Link to={work?.id ? `/works/${encodeURIComponent(work.id)}` : "#"}
-                      className="line-clamp-1 text-sm font-medium hover:text-primary">
-                    {work?.title ?? "Titolo non disponibile"}
-                </Link>
-                {authors && <p className="truncate text-xs text-muted-foreground">{authors}</p>}
-            </div>
-            <div className="shrink-0 text-right text-xs text-muted-foreground">
-                <p className="whitespace-nowrap">{formatDateShort(loan.loanDate)} → {formatDateShort(loan.returnDate)}</p>
-                {late && <Badge variant="outline" className="mt-1 border-warning text-amber-700 dark:text-amber-400">In ritardo</Badge>}
-            </div>
-        </li>
+        <Item size="sm" role="listitem">
+            <ItemMedia variant="icon" className={late ? "text-warning" : "text-success"}>
+                {late ? <BookX /> : <BookCheck />}
+            </ItemMedia>
+            <ItemContent className="min-w-0 gap-0.5">
+                <ItemTitle className="w-auto">
+                    <Link to={work?.id ? `/works/${encodeURIComponent(work.id)}` : "#"} className="hover:text-primary">
+                        {work?.title ?? "Titolo non disponibile"}
+                    </Link>
+                </ItemTitle>
+                {authors && <ItemDescription className="truncate text-xs">{authors}</ItemDescription>}
+            </ItemContent>
+            <ItemActions className="flex-col items-end gap-1 text-xs text-muted-foreground">
+                <span className="whitespace-nowrap">{formatDateShort(loan.loanDate)} → {formatDateShort(loan.returnDate)}</span>
+                {late && <Badge variant="outline" className="border-warning text-amber-700 dark:text-amber-400">In ritardo</Badge>}
+            </ItemActions>
+        </Item>
     );
 }
 
@@ -36,9 +39,14 @@ export default function ReturnedLoansSection({ loans }) {
             {loans.length === 0 ? (
                 <EmptyNote>Lo storico dei prestiti restituiti comparirà qui.</EmptyNote>
             ) : (
-                <ul className="divide-y divide-border rounded-xl border border-border bg-card">
-                    {loans.map((loan) => <ReturnedLoanRow key={loan.id} loan={loan} />)}
-                </ul>
+                <ItemGroup className="gap-0 rounded-xl border border-border bg-card">
+                    {loans.map((loan, i) => (
+                        <Fragment key={loan.id}>
+                            {i > 0 && <ItemSeparator className="my-0" />}
+                            <ReturnedLoanRow loan={loan} />
+                        </Fragment>
+                    ))}
+                </ItemGroup>
             )}
         </ProfileSection>
     );
