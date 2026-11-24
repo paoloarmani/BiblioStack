@@ -68,17 +68,48 @@ Il seed demo **non** va caricato in produzione. Lo schema del database lo creano
 | `HTTP_PORT`, `HTTPS_PORT` | no (80, 443) | Porte pubblicate sull'host. Accettano anche `IP:porta`, per esempio `127.0.0.1:8080`. |
 | `TRUST_PROXY_HOPS` | no (1) | Proxy fidati davanti al backend: 1 = solo Caddy, 2 = Caddy più un proxy esterno. |
 | `TRUSTED_PROXIES` | no | Solo dietro un proxy esterno: da quali indirizzi Caddy accetta `X-Forwarded-For` (`private_ranges` o l'IP del proxy). |
-| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | sì | Credenziali del database interno. |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | sì | Proprietario del database: usato solo per creazione dello schema, migrazioni, import e backup. |
+| `APP_DB_USER`, `APP_DB_PASSWORD` | sì (password) | Ruolo con cui si collega il backend: solo lettura e scrittura dei dati, nessun permesso sulla struttura. Generare la password con `openssl rand -hex 32` (finisce in un URL: evitare `/ + @`). |
 | `REDIS_PASSWORD` | sì | Password di Redis. |
 | `JWT_SECRET`, `JWT_REFRESH` | sì | Firmano i token di sessione. Se cambiano, tutti gli utenti devono rifare il login. |
 | `CARD_SECRET` | sì | Firma i QR delle tessere. Se cambia, **tutte le tessere stampate smettono di funzionare**. |
 | `ALLOWED_GOOGLE_DOMAINS` | sì | Domini le cui email possono creare un account entrando con Google, per esempio `scuola.edu.it`. Il backend non parte se è vuoto. |
 | `GOOGLE_CLIENT_ID` | no | Abilita il login con Google. |
-| `RESEND_API_KEY` | no | Invio delle email (reset password, promemoria). Senza, le email non partono. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | no | Posta in uscita tramite l'account tecnico dell'ente (consigliato). Porta 587 = STARTTLS obbligatorio, 465 = TLS. Vedi [Email](#email). |
+| `EMAIL_FROM` | no | Mittente delle email, per esempio `Biblioteca ITT Pozzo <biblioteca@scuola.it>`. Con SMTP di norma deve coincidere con `SMTP_USER` o un suo alias. |
+| `RESEND_API_KEY` | no | Alternativa a SMTP. Serve un dominio verificato su Resend in `EMAIL_FROM`. |
+| `EMAIL_DAILY_LIMIT`, `EMAIL_MONTHLY_LIMIT` | no | Tetto globale sugli invii (default 500/giorno con SMTP; 90/giorno e 2900/mese con Resend). `0` = nessun limite. |
+| `LIBRARY_NAME`, `LIBRARY_INSTITUTION`, `LIBRARY_ADDRESS`, `LIBRARY_EMAIL`, `LIBRARY_PHONE`, `LIBRARY_HOURS` | no | Dati mostrati nel footer del sito. `LIBRARY_HOURS` accetta più righe separate da `\|`. |
+| `LIBRARY_PRIVACY_URL`, `LIBRARY_RULES_URL`, `LIBRARY_WEBSITE_URL` | no | Link del footer: informativa privacy dell'ente (da impostare: è un obbligo di legge), regolamento dei prestiti, sito della scuola. Solo `http(s)`. |
 | `GOOGLE_BOOKS_API_KEY` | no | Ricerca dei dati di un libro tramite ISBN quando si aggiunge un'opera. |
 | `LOG_LEVEL` | no (`info`) | Livello dei log del backend. |
 
 Per generare segreti robusti: `openssl rand -base64 48`.
+
+Le variabili `LIBRARY_*`, `SMTP_*` ed `EMAIL_*` sono lette all'avvio del backend: dopo averle
+cambiate basta `./bibliostack.sh prod up` (non serve ricompilare il frontend).
+
+## Email
+
+Il backend invia email per reset password, attivazione account e avvisi su prestiti e prenotazioni.
+L'ente crea un **account di posta tecnico** per la biblioteca sul proprio provider (per esempio
+`biblioteca@scuola.it`) e se ne inseriscono le credenziali SMTP:
+
+```bash
+SMTP_HOST=smtp.office365.com      # Microsoft 365; Google Workspace: smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=biblioteca@scuola.it
+SMTP_PASS=...                     # con Google serve una "password per le app"
+EMAIL_FROM=Biblioteca ITT Pozzo <biblioteca@scuola.it>
+```
+
+All'avvio il backend verifica la connessione: in `./bibliostack.sh prod logs backend` compare
+`SMTP transport ready` oppure l'errore (credenziali, porta, autenticazione SMTP disattivata
+sull'account). Con Microsoft 365 l'amministratore deve abilitare "SMTP AUTH" per quella casella.
+
+Il **tetto globale** (`EMAIL_DAILY_LIMIT`) protegge la quota del provider anche da richieste
+distribuite, che i limiti per IP non fermano. Raggiunto il tetto le email non partono e nel log
+compare `Email quota reached`.
 
 ## HTTPS: quale scenario scegliere
 
@@ -187,6 +218,10 @@ ls docker/postgres/migrations/               # ci sono migrazioni nuove rispetto
 ./bibliostack.sh prod up                     # ricostruisce le immagini e riavvia
 ```
 
+Se una nuova versione aggiunge variabili obbligatorie, `prod up` si ferma indicando quale manca:
+confrontare `docker/.env.prod` con `docker/.env.prod.example` (per esempio `APP_DB_PASSWORD`,
+introdotta col ruolo a permessi minimi).
+
 Gli script `docker/postgres/init/*.sql` girano **solo alla prima creazione del volume**. Un database
 già in uso riceve le modifiche dello schema solo tramite i file in `docker/postgres/migrations/`.
 Questi file sono idempotenti, quindi rieseguirne uno già applicato non fa danni.
@@ -196,6 +231,9 @@ in `docker/postgres/migrations/`.
 
 ## Sicurezza
 
+- Il backend si collega al database con un ruolo a permessi minimi (`APP_DB_USER`): niente
+  modifiche alla struttura, ai ruoli o ad altri database. `./bibliostack.sh prod up` lo crea o
+  riallinea a ogni avvio; a mano: `./bibliostack.sh prod db-ruolo`.
 - Tenere `docker/.env.prod` con permessi `600` e conservarne una copia sicura insieme ai backup.
   Il file è escluso da git.
 - Esporre solo `web`: database, Redis e backend non hanno porte pubblicate.
@@ -212,4 +250,5 @@ in `docker/postgres/migrations/`.
 | Certificato non ottenuto (scenario A) | DNS non ancora propagato o porta 80/443 chiusa: `./bibliostack.sh prod logs web`. |
 | `prod up` fallisce con "port is already allocated" | La porta 80/443 è già usata da un altro servizio: scenario D. |
 | Login bloccato per tutti insieme ("troppi tentativi") | Proxy davanti a Caddy senza `TRUSTED_PROXIES` e `TRUST_PROXY_HOPS=2` (scenario D). |
-| Le email non arrivano | Manca `RESEND_API_KEY`, oppure il dominio mittente non è verificato su Resend. |
+| Le email non arrivano | `./bibliostack.sh prod logs backend`: errore SMTP (credenziali, SMTP AUTH disattivato, `EMAIL_FROM` non autorizzato), oppure `Email quota reached`. Senza `SMTP_HOST` né `RESEND_API_KEY` le email non partono. |
+| Il backend non si collega al database dopo l'aggiornamento | Manca `APP_DB_PASSWORD` in `docker/.env.prod`, o il ruolo non è stato creato: `./bibliostack.sh prod db-ruolo`. |
