@@ -1,5 +1,13 @@
 import { useEffect, useRef} from "react";
-import { Scanner } from "@yudiel/react-qr-scanner";
+import { Scanner, setZXingModuleOverrides } from "@yudiel/react-qr-scanner";
+// Modulo WebAssembly del lettore (usato dove il browser non ha BarcodeDetector nativo, es. Firefox e
+// Chrome su Windows): servito dal nostro dominio invece che dal CDN jsDelivr predefinito. Funziona anche
+// su reti che filtrano i CDN ed è compatibile con la Content-Security-Policy di Caddy.
+import zxingReaderWasmUrl from "zxing-wasm/reader/zxing_reader.wasm?url";
+
+setZXingModuleOverrides({
+    locateFile: (path, prefix) => (path.endsWith(".wasm") ? zxingReaderWasmUrl : prefix + path),
+});
 import { Dialog,
     DialogContent,
     DialogHeader,

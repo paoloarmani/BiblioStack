@@ -11,6 +11,9 @@
 # TRUSTED_PROXIES: da quali indirizzi Caddy accetta X-Forwarded-For. Senza un proxy davanti resta
 # il default (nessuno), così un client non può falsificare il proprio IP; dietro un proxy, senza
 # questa impostazione il backend vedrebbe tutti gli utenti con l'IP del proxy (rate limit condiviso).
+#
+# Content-Security-Policy: se si aggiunge una risorsa esterna (script, font, API chiamata dal browser)
+# va aggiunta qui, altrimenti il browser la blocca (errore visibile nella console).
 
 {
 	servers {
@@ -41,8 +44,20 @@
 		X-Content-Type-Options nosniff
 		X-Frame-Options DENY
 		Referrer-Policy strict-origin-when-cross-origin
+		# Fotocamera solo per il lettore QR/codici a barre del sito; nient'altro
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), usb=()"
+		# Origini ammesse. Esterne: solo Google (accesso con Google, gsi). Copertine da qualunque https.
+		# 'wasm-unsafe-eval' serve al lettore QR (WebAssembly); 'unsafe-inline' solo per gli stili,
+		# perché React e Radix impostano attributi style
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		-Server
 	}
+
+	# HSTS: il browser userà solo HTTPS per un anno. Non su localhost, dove varrebbe per tutte le porte
+	# (rompendo per esempio il server di sviluppo su http://localhost:5173); sugli IP i browser lo ignorano.
+	# Senza includeSubDomains: gli altri siti della scuola sui sottodomini non vengono toccati.
+	@hsts not host localhost
+	header @hsts Strict-Transport-Security "max-age=31536000"
 
 	log {
 		output stdout

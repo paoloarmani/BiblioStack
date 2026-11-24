@@ -239,6 +239,10 @@ in `docker/postgres/migrations/`.
   Il file è escluso da git.
 - Limite generale sulle API (vedi `API_RATE_LIMIT_*`), oltre ai limiti specifici su login, reset
   password e invio di email. Oltre il limite il backend risponde 429 con `Retry-After`.
+- Caddy invia `Content-Security-Policy`, `Permissions-Policy` (fotocamera solo per il sito) e
+  `Strict-Transport-Security` (non su `localhost`, senza `includeSubDomains` per non toccare gli
+  altri siti della scuola). Se si aggiunge una risorsa esterna va aggiunta alla CSP in
+  `frontend/Caddyfile`, altrimenti il browser la blocca.
 - Esporre solo `web`: database, Redis e backend non hanno porte pubblicate.
 - Aggiornare periodicamente il sistema operativo e Docker, poi `./bibliostack.sh prod up` per
   ricostruire le immagini.
@@ -255,4 +259,5 @@ in `docker/postgres/migrations/`.
 | Login bloccato per tutti insieme ("troppi tentativi") | Proxy davanti a Caddy senza `TRUSTED_PROXIES` e `TRUST_PROXY_HOPS=2` (scenario D). |
 | Le email non arrivano | `./bibliostack.sh prod logs backend`: errore SMTP (credenziali, SMTP AUTH disattivato, `EMAIL_FROM` non autorizzato), oppure `Email quota reached`. Senza `SMTP_HOST` né `RESEND_API_KEY` le email non partono. |
 | Errori "Troppe richieste" durante l'uso normale | Molti utenti anonimi dietro lo stesso IP: alzare `API_RATE_LIMIT_ANON`. Dietro un proxy, controllare `TRUSTED_PROXIES` e `TRUST_PROXY_HOPS` (altrimenti tutti risultano col solo IP del proxy). |
+| Una funzione del sito non carica una risorsa esterna | Bloccata dalla Content-Security-Policy: la console del browser indica cosa aggiungere in `frontend/Caddyfile`. |
 | Il backend non si collega al database dopo l'aggiornamento | Manca `APP_DB_PASSWORD` in `docker/.env.prod`, o il ruolo non è stato creato: `./bibliostack.sh prod db-ruolo`. |
