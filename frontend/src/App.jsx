@@ -7,6 +7,8 @@ import AddWorkPage     from "./pages/admin/AddWorkPage.jsx"
 import WorkDetailPage  from "./pages/public/WorkDetailPage.jsx"
 import CatalogPage     from "./pages/public/CatalogPage.jsx"
 
+import PublicLayout from "./components/layout/PublicLayout.jsx"
+
 import AdminGuard           from "./features/admin/components/AdminGuard.jsx"
 import AdminLayout          from "./features/admin/components/AdminLayout.jsx"
 import AdminDashboardPage   from "./features/admin/AdminDashboardPage.jsx"
@@ -26,20 +28,23 @@ function App() {
         <div className="min-h-screen bg-background text-foreground">
             <Router>
                 <Routes>
-                    {/* Pubbliche */}
-                    <Route path="/"          element={<HomePage />} />
-                    <Route path="/login"     element={<LoginPage />} />
-                    <Route path="/catalog"   element={<CatalogPage />} />
-                    <Route path="/works/:id" element={<WorkDetailPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route path="/setup-account" element={<SetupAccountPage />} />
+                    {/* Pubbliche e utente: con footer */}
+                    <Route element={<PublicLayout />}>
+                        {/* Pubbliche */}
+                        <Route path="/"          element={<HomePage />} />
+                        <Route path="/login"     element={<LoginPage />} />
+                        <Route path="/catalog"   element={<CatalogPage />} />
+                        <Route path="/works/:id" element={<WorkDetailPage />} />
+                        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                        <Route path="/reset-password" element={<ResetPasswordPage />} />
+                        <Route path="/setup-account" element={<SetupAccountPage />} />
 
-                    {/* Utente */}
-                    <Route path="/profile"   element={<ProfilePage />} />
-                    <Route path="/card"    element={<CardPage />} />
-                    <Route path="/loans" element={<LoanHistoryPage />} />
-                    <Route path="/reservations" element={<ReservationHistoryPage />} />
+                        {/* Utente */}
+                        <Route path="/profile"   element={<ProfilePage />} />
+                        <Route path="/card"    element={<CardPage />} />
+                        <Route path="/loans" element={<LoanHistoryPage />} />
+                        <Route path="/reservations" element={<ReservationHistoryPage />} />
+                    </Route>
 
                     {/* Admin */}
                     <Route element={<AdminGuard />}>
